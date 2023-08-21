@@ -40,7 +40,7 @@ function AdminEditUser() {
     async function getProfile(){
         try{
             console.log(username);
-            const res = await Axios.post('http://localhost:3000/admin/user/profile', {username, un:srcState.username, gn:"admin"}, {withCredentials: true});
+            const res = await Axios.post('http://localhost:8080/admin/user/profile', {username, un:srcState.username, gn:"admin"}, {withCredentials: true});
             if(res.data.success){
                 setUsername(res.data.username);
                 setEmail(res.data.email);
@@ -92,7 +92,7 @@ function AdminEditUser() {
             return;
         }
         try{
-            const res = await Axios.post('http://localhost:3000/admin/update/user', {username, password, groups, email, status, un:srcState.username, gn:"admin"}, {withCredentials: true});
+            const res = await Axios.post('http://localhost:8080/admin/update/user', {username, password, groups, email, status, un:srcState.username, gn:"admin"}, {withCredentials: true});
             if(res.data.success){
                 srcDispatch({type:"flashMessage", value:"profile updated"});
                 return navigate("/user-management");
@@ -105,7 +105,7 @@ function AdminEditUser() {
 
     useEffect(()=>{
         const getUserInfo = async()=>{
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             if(res.data.success){
                 await srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
                 if(!await res.data.groups.includes("admin")){

@@ -42,13 +42,13 @@ function PlEditTask() {
         e.preventDefault();
         try{
             let gn
-            const permit_g = await Axios.post("http://localhost:3000/get-application",{acronym:thisTask.Task_app_Acronym}, {withCredentials:true})
+            const permit_g = await Axios.post("http://localhost:8080/get-application",{acronym:thisTask.Task_app_Acronym}, {withCredentials:true})
             //Get group for check group
             if(permit_g.data.apps[0].App_Acronym){
                 gn = permit_g.data.apps[0].App_permit_Done
             }
             //console.log(newState)
-            const result = await Axios.post("http://localhost:3000/pl-update/task", {taskId:thisTask.Task_id, un:srcState.username, gn, userNotes:taskNotes, taskState:newState, acronym:thisTask.Task_app_Acronym, plan:taskPlan}, {withCredentials:true});
+            const result = await Axios.post("http://localhost:8080/pl-update/task", {taskId:thisTask.Task_id, un:srcState.username, gn, userNotes:taskNotes, taskState:newState, acronym:thisTask.Task_app_Acronym, plan:taskPlan}, {withCredentials:true});
 
             if(result.data.success){
                 srcDispatch({type:"flashMessage", value:"Task updated"});
@@ -94,7 +94,7 @@ function PlEditTask() {
         
         //axios task id
         try{
-            const taskResult = await Axios.post("http://localhost:3000/all-task/taskId", {taskId:state.taskId}, {withCredentials:true});
+            const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", {taskId:state.taskId}, {withCredentials:true});
             if(taskResult.data.success){
                 setThisTask(taskResult.data.task[0])
                 //console.log(taskResult.data.task[0])
@@ -138,7 +138,7 @@ function PlEditTask() {
     //Get plans by acronym
     async function getPlans(){
         try{
-            const planResult = await Axios.post('http://localhost:3000/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
+            const planResult = await Axios.post('http://localhost:8080/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
 
             if(planResult.data.success){
                 setPlans(planResult.data.plans);
@@ -174,7 +174,7 @@ function PlEditTask() {
             }
 
 
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             if(res.data.success){
                 if(res.data.status == 0) navigate("/login");
                 srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});

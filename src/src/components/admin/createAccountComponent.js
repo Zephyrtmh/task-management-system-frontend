@@ -24,7 +24,7 @@ function CreateAccount() {
     async function handleSubmit(e){
         e.preventDefault();
         try{
-            const res = await Axios.post("http://localhost:3000/register", {username, password, email, groups, un:srcState.username, gn:"admin", status}, {withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/register", {username, password, email, groups, un:srcState.username, gn:"admin", status}, {withCredentials:true});
             if(res.data.success){
                 srcDispatch({type:"flashMessage", value:"account created"});
                 //Reset useState fields and reset input fields
@@ -60,7 +60,7 @@ function CreateAccount() {
 
     //Get all groups
     async function getAllgroups(){
-      const res = await Axios.post("http://localhost:3000/allgroups",{un:srcState.username, gn:"admin"},{withCredentials:true});
+      const res = await Axios.post("http://localhost:8080/allgroups",{un:srcState.username, gn:"admin"},{withCredentials:true});
         if(res.data.success){
           setAllGroups(res.data.groups);
         }
@@ -78,7 +78,7 @@ function CreateAccount() {
     //useEffect
     useEffect(()=>{
       const getUserInfo = async()=>{
-        const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
         if(res.data.success){
             srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
             if(!await res.data.groups.includes("admin")){

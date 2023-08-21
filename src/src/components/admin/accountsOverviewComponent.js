@@ -22,7 +22,7 @@ function AccountsOverview() {
     
     async function getAllUsers(){
         try{
-            const res = await Axios.post('http://localhost:3000/allusers', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            const res = await Axios.post('http://localhost:8080/allusers', {un:srcState.username, gn:"admin"}, {withCredentials: true})
             if(res.data.success){
                 setUsers(res.data.users);
                 setGroups(res.data.groups);
@@ -37,7 +37,7 @@ function AccountsOverview() {
     useEffect(()=>{
       const getUserInfo = async()=>{
         try{
-          const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
           if(res.data.success){
             srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
             if(!res.data.groups.includes("admin")){

@@ -35,7 +35,7 @@ function CreatePlan() {
       
       //create plan
       try{
-        const result = await Axios.post("http://localhost:3000/create-plan", {planName, startDate:planStartDate, endDate:planEndDate, appAcronym:acronym, colour:planColour, un:srcState.username, gn}, {withCredentials:true});
+        const result = await Axios.post("http://localhost:8080/create-plan", {planName, startDate:planStartDate, endDate:planEndDate, appAcronym:acronym, colour:planColour, un:srcState.username, gn}, {withCredentials:true});
 
         if(result.data.success){
           //Display message
@@ -89,7 +89,7 @@ function CreatePlan() {
       }
       
       //get app 
-      const appResult = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym},{withCredentials:true});
+      const appResult = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym},{withCredentials:true});
       if(!appResult.data.success){
         srcDispatch({type:"flashMessage", value:"Invalid app acronym"});
         navigate(-1);
@@ -119,7 +119,7 @@ function CreatePlan() {
             return navigate(-1)
           }
           //Get user info
-          const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
           if(res.data.success){
             if(res.data.status == 0) navigate("/login");
               srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});

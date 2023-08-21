@@ -38,7 +38,7 @@ function CreateApp() {
         e.preventDefault();
         //console.log(acronym, description, rnumber, startDate, endDate, open, toDo, doing, done);
         try{
-            const result = await Axios.post('http://localhost:3000/create-application',{acronym, description, rnumber, startDate, endDate, open, toDo, doing, done, un:srcState.username, gn:"project leader", create}, {withCredentials:true});
+            const result = await Axios.post('http://localhost:8080/create-application',{acronym, description, rnumber, startDate, endDate, open, toDo, doing, done, un:srcState.username, gn:"project leader", create}, {withCredentials:true});
             //console.log(result.data.success);
             if(result.data.success){
                 //clear all fields 
@@ -104,7 +104,7 @@ function CreateApp() {
     //Get groups
     async function getGroups(){
         try{
-            const groupResult = await Axios.post('http://localhost:3000/allgroups', {un:srcState.username, gn:"project leader"}, {withCredentials:true});
+            const groupResult = await Axios.post('http://localhost:8080/allgroups', {un:srcState.username, gn:"project leader"}, {withCredentials:true});
             if(groupResult.data.success){
                 setGroups(groupResult.data.groups);
             }
@@ -124,7 +124,7 @@ function CreateApp() {
     useEffect(()=>{
         try{
             const getUserInfo = async()=>{
-                const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+                const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
                 if(res.data.success){
                     if(res.data.status == 0) navigate("/login");
                     srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});

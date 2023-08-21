@@ -23,7 +23,7 @@ function CreateGroup() {
       e.preventDefault();
       console.log(formGroup)
       try{
-        const res = await Axios.post("http://localhost:3000/register/group", {groupName:formGroup, un:srcState.username, gn:"admin"}, {withCredentials:true});
+        const res = await Axios.post("http://localhost:8080/register/group", {groupName:formGroup, un:srcState.username, gn:"admin"}, {withCredentials:true});
         if(res.data.success){
           srcDispatch({type:"flashMessage", value:"Group created"});
           getAllGroups();
@@ -37,7 +37,7 @@ function CreateGroup() {
     //Get all groups
     async function getAllGroups(){
         try{
-            const res = await Axios.post("http://localhost:3000/allgroups", {un:srcState.username, gn:"admin"}, {withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/allgroups", {un:srcState.username, gn:"admin"}, {withCredentials:true});
             if(res.data.success){
                 setAllGroups(res.data.groups);
             }

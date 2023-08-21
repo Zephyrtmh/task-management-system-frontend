@@ -88,7 +88,7 @@ function MainComponent(){
     //Logout
     async function logoutFunc(){
 
-        const logoutResult = await Axios.post("http://localhost:3000/logout", {}, {withCredentials: true});
+        const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
         if(logoutResult.data.success){
         //Clear localstorage
         localStorage.clear();
@@ -114,7 +114,7 @@ function MainComponent(){
     useEffect(()=>{
         const getUserInfo = async()=>{
             
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             if(res.data.success){
                 if(res.data.status == 0) logoutFunc();
                 //console.log("userstatus", res.data.status)

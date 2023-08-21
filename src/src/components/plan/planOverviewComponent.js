@@ -55,14 +55,14 @@ function PlanOverview() {
     //Set authroization
     async function setAuthorization(){
         //Get application
-        const appResult = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym}, {withCredentials:true})
+        const appResult = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym}, {withCredentials:true})
 
         if(appResult.data.success){
             
             //Check if current user got permission for create 
             if(appResult.data.apps[0].App_permit_Create != null){
                 //Checkgroup
-                let createR = await Axios.post("http://localhost:3000/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Create});
+                let createR = await Axios.post("http://localhost:8080/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Create});
                 if(createR.data.cgResult){
                     setACreate(true);
                 }
@@ -71,7 +71,7 @@ function PlanOverview() {
             //Check if current user got permission for open 
             if(appResult.data.apps[0].App_permit_Open != null){
                 //Checkgroup
-                let OpenR = await Axios.post("http://localhost:3000/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Open});
+                let OpenR = await Axios.post("http://localhost:8080/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Open});
                 if(OpenR.data.cgResult){
                     setAOpen(true);
                 }
@@ -80,7 +80,7 @@ function PlanOverview() {
             //Check if current user got permission for todo 
             if(appResult.data.apps[0].App_permit_toDoList != null){
                 //Checkgroup
-                let todoR = await Axios.post("http://localhost:3000/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_toDoList});
+                let todoR = await Axios.post("http://localhost:8080/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_toDoList});
                 if(todoR.data.cgResult){
                     setATodo(true);
                 }
@@ -89,7 +89,7 @@ function PlanOverview() {
             //Check if current user got permission for doing 
             if(appResult.data.apps[0].App_permit_Doing != null){
                 //Checkgroup
-                let doingR = await Axios.post("http://localhost:3000/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Doing});
+                let doingR = await Axios.post("http://localhost:8080/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Doing});
                 if(doingR.data.cgResult){
                     setADoing(true);
                 }
@@ -98,7 +98,7 @@ function PlanOverview() {
             //Check if current user got permission for done 
             if(appResult.data.apps[0].App_permit_Done != null){
                 //Checkgroup
-                let doneR = await Axios.post("http://localhost:3000/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Done});
+                let doneR = await Axios.post("http://localhost:8080/cg", {un:srcState.username, gn:appResult.data.apps[0].App_permit_Done});
                 if(doneR.data.cgResult){
                     setADone(true);
                 }
@@ -118,7 +118,7 @@ function PlanOverview() {
         }
 
         //Axios get app
-        const appResult = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym}, {withCredentials:true})
+        const appResult = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym}, {withCredentials:true})
         if(appResult.data.success){
             setAppStartDate(new Date(appResult.data.apps[0].App_startDate).toISOString().substr(0,10));
             setAppEndDate(new Date(appResult.data.apps[0].App_endDate).toISOString().substr(0,10));
@@ -127,7 +127,7 @@ function PlanOverview() {
         }
 
         //Axios get plan by app acronym
-        const planResult = await Axios.post("http://localhost:3000/all-plan/app", {app_Acronym:state.acronym}, {withCredentials:true});
+        const planResult = await Axios.post("http://localhost:8080/all-plan/app", {app_Acronym:state.acronym}, {withCredentials:true});
         //console.log(planResult)
         if(planResult.data.success){
             setPlan(planResult.data.plans);
@@ -135,7 +135,7 @@ function PlanOverview() {
 
 
         //Axios get task by app acronym
-        const taskResult = await Axios.post("http://localhost:3000/all-task/app", {app_Acronym:state.acronym}, {withCredentials:true});
+        const taskResult = await Axios.post("http://localhost:8080/all-task/app", {app_Acronym:state.acronym}, {withCredentials:true});
         if(taskResult.data.success){
             //Set onload to false
             setOnLoad(false);
@@ -145,7 +145,7 @@ function PlanOverview() {
                 if(taskResult.data.tasks[k].Task_state === "open"){
                     //Get the colour of the task based on the plan and append to the array 
                     if(taskResult.data.tasks[k].Task_plan){
-                        const taskPlanColour = await Axios.post("http://localhost:3000/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
+                        const taskPlanColour = await Axios.post("http://localhost:8080/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
                         if(taskPlanColour.data.success){
                             taskResult.data.tasks[k]['colour'] = taskPlanColour.data.plan[0].colour;
                             setOpen(setOpen => [...setOpen,  taskResult.data.tasks[k]]);
@@ -161,7 +161,7 @@ function PlanOverview() {
 
                     //Get the colour of the task based on the plan and append to the array 
                     if(taskResult.data.tasks[k].Task_plan){
-                        const taskPlanColour = await Axios.post("http://localhost:3000/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
+                        const taskPlanColour = await Axios.post("http://localhost:8080/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
                         if(taskPlanColour.data.success){
                             taskResult.data.tasks[k]['colour'] = taskPlanColour.data.plan[0].colour;
                             setTodo(setTodo => [...setTodo,  taskResult.data.tasks[k]]);
@@ -178,7 +178,7 @@ function PlanOverview() {
 
                     //Get the colour of the task based on the plan and append to the array 
                     if(taskResult.data.tasks[k].Task_plan){
-                        const taskPlanColour = await Axios.post("http://localhost:3000/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
+                        const taskPlanColour = await Axios.post("http://localhost:8080/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
                         if(taskPlanColour.data.success){
                             taskResult.data.tasks[k]['colour'] = taskPlanColour.data.plan[0].colour;
                             setDoing(setDoing => [...setDoing, taskResult.data.tasks[k]]);
@@ -197,7 +197,7 @@ function PlanOverview() {
 
                     //Get the colour of the task based on the plan and append to the array 
                     if(taskResult.data.tasks[k].Task_plan){
-                        const taskPlanColour = await Axios.post("http://localhost:3000/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
+                        const taskPlanColour = await Axios.post("http://localhost:8080/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
                         if(taskPlanColour.data.success){
                             taskResult.data.tasks[k]['colour'] = taskPlanColour.data.plan[0].colour;
                             setDone(setDone => [...setDone,  taskResult.data.tasks[k]]);
@@ -214,7 +214,7 @@ function PlanOverview() {
 
                     //Get the colour of the task based on the plan and append to the array 
                     if(taskResult.data.tasks[k].Task_plan){
-                        const taskPlanColour = await Axios.post("http://localhost:3000/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
+                        const taskPlanColour = await Axios.post("http://localhost:8080/get-plan/planname", {planName:taskResult.data.tasks[k].Task_plan}, {withCredentials:true});
                         if(taskPlanColour.data.success){
                             taskResult.data.tasks[k]['colour'] = taskPlanColour.data.plan[0].colour;
                             setClosed(setClosed => [...setClosed,  taskResult.data.tasks[k]]);
@@ -251,7 +251,7 @@ function PlanOverview() {
                 return navigate("/")
             }
 
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             if(res.data.success){
                 if(res.data.status == 0) navigate("/login");
                 srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});

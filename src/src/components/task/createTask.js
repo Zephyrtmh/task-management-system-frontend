@@ -35,7 +35,7 @@ function CreateTask() {
         e.preventDefault();
         //console.log(acronym, description, rnumber, startDate, endDate, open, toDo, doing, done);
         try{
-            const result = await Axios.post('http://localhost:3000/create-task',{taskName, taskDescription, taskNotes, taskPlan, taskApp:acronym, taskCreator:srcState.username, taskOwner:srcState.username, un:srcState.username, gn}, {withCredentials:true});
+            const result = await Axios.post('http://localhost:8080/create-task',{taskName, taskDescription, taskNotes, taskPlan, taskApp:acronym, taskCreator:srcState.username, taskOwner:srcState.username, un:srcState.username, gn}, {withCredentials:true});
 
             if(result.data.success){
 
@@ -69,7 +69,7 @@ function CreateTask() {
         }
         
         //get app 
-        const appResult = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym},{withCredentials:true});
+        const appResult = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym},{withCredentials:true});
         //console.log(appResult);
         if(!appResult.data.success){
             srcDispatch({type:"flashMessage", value:"Invalid app acronym"});
@@ -82,8 +82,8 @@ function CreateTask() {
         try{
             if(state.acronym) setAcronym(state.acronym);
 
-            const planResult = await Axios.post('http://localhost:3000/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
-            const appResult = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym})
+            const planResult = await Axios.post('http://localhost:8080/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
+            const appResult = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym})
             if(planResult.data.success){
                 setPlans(planResult.data.plans);
             }
@@ -117,12 +117,12 @@ function CreateTask() {
             }
 
             //Get user info
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             //console.log(res)
             if(res.data.success){
                 if(res.data.status == 0) navigate("/login");
                 srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
-                const checkOpenPermit = await Axios.post("http://localhost:3000/get-application", {acronym:state.acronym}, {withCredentials:true})
+                const checkOpenPermit = await Axios.post("http://localhost:8080/get-application", {acronym:state.acronym}, {withCredentials:true})
                 if(checkOpenPermit.length < 0 ){
                     navigate("/")
                 }

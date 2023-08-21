@@ -20,7 +20,7 @@ function AppOverview() {
     //Get application
     async function getApplication(){
         try{
-            const appResult = await Axios.post('http://localhost:3000/all-application', {un:srcState.username}, {withCredentials:true});
+            const appResult = await Axios.post('http://localhost:8080/all-application', {un:srcState.username}, {withCredentials:true});
             if(appResult.data.success){
                 setApps(appResult.data.apps);
 
@@ -43,7 +43,7 @@ function AppOverview() {
     useEffect(()=>{
         const getUserInfo = async()=>{
             try{
-                const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+                const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
                 if(res.data.success){
                     if(res.data.status == 0) navigate("/login");
                     srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});

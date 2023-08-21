@@ -18,7 +18,7 @@ function LoginForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     try{
-      await Axios.post('http://localhost:3000/login', {username, password}, {withCredentials: true}).then((data)=>{
+      await Axios.post('http://localhost:8080/login', {username, password}, {withCredentials: true}).then((data)=>{
         if(data.data.success){
           console.log(data.data)
           console.log(data.data.groups.includes("project leader"))

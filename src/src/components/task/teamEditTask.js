@@ -46,7 +46,7 @@ function TeamEditTask() {
     async function onSubmit(e){
         e.preventDefault();
         try{
-            var permit_g = await Axios.post("http://localhost:3000/get-application",{acronym:thisTask.Task_app_Acronym}, {withCredentials:true})
+            var permit_g = await Axios.post("http://localhost:8080/get-application",{acronym:thisTask.Task_app_Acronym}, {withCredentials:true})
             let gn;
 
             //Get group for check group
@@ -57,7 +57,7 @@ function TeamEditTask() {
                 console.log("done state", permit_g.data.apps[0].App_permit_Doing)
                 gn = permit_g.data.apps[0].App_permit_Doing;
             }
-            const result = await Axios.post("http://localhost:3000/team-update/task", {taskId:thisTask.Task_id, un:srcState.username, gn, userNotes:taskNotes, taskState:newState, acronym:thisTask.Task_app_Acronym, taskPlan}, {withCredentials:true});
+            const result = await Axios.post("http://localhost:8080/team-update/task", {taskId:thisTask.Task_id, un:srcState.username, gn, userNotes:taskNotes, taskState:newState, acronym:thisTask.Task_app_Acronym, taskPlan}, {withCredentials:true});
 
             if(result.data.success){
                 srcDispatch({type:"flashMessage", value:"Task updated"});
@@ -95,7 +95,7 @@ function TeamEditTask() {
         
         //axios task id
         try{
-            const taskResult = await Axios.post("http://localhost:3000/all-task/taskId", {taskId:state.taskId}, {withCredentials:true});
+            const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", {taskId:state.taskId}, {withCredentials:true});
             if(taskResult.data.success){
                 setThisTask(taskResult.data.task[0])
                 //console.log(taskResult.data.task[0])
@@ -147,7 +147,7 @@ function TeamEditTask() {
     //Get plans by acronym
     async function getPlans(){
         try{
-            const planResult = await Axios.post('http://localhost:3000/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
+            const planResult = await Axios.post('http://localhost:8080/all-plan/app', {app_Acronym:state.acronym}, {withCredentials:true});
 
             if(planResult.data.success){
                 setPlans(planResult.data.plans);
@@ -182,7 +182,7 @@ function TeamEditTask() {
                 navigate(-1);
             }
 
-            const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
             if(res.data.success){
                 if(res.data.status == 0) navigate("/login");
                 srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
