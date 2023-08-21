@@ -44,23 +44,39 @@ function LoginForm() {
     }
   }
 
-  //useEffect()
-  useEffect(()=>{
-    const getUserInfo = async()=>{
-      try{
-          const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
-          if(res.data.success){
-              if(res.data.status == 0) logoutFunc();
-              dispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
-              
-          }
-      }
-      catch(err){
-          console.log(err);
-      }
+async function authorization(){
+    if(srcState.logIn == true){
+      //srcDispatch({type:"flashMessage", value:"Unauthorized"});
+      navigate("/")
+    }
   }
-  getUserInfo();
-  },[])
+
+  //useEffect()
+  useEffect(() => {
+    // const getUserInfo = async () => {
+    //   try {
+    //     const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+    //     if (res.data.success) {
+    //       if (res.data.status == 0) logoutFunc()
+    //       srcDispatch({
+    //         type: "login",
+    //         value: res.data,
+    //         admin: res.data.accgroups.some(obj => Object.values(obj).includes("admin")),
+    //         isPl: res.data.accgroups.some(obj => Object.values(obj).includes("project leader"))
+    //       })
+    //     }
+    //   } catch (err) {
+    //     console.log(err)
+    //   }
+    // }
+    // getUserInfo()
+  }, [])
+
+  useEffect(()=>{
+    if(srcState.testLoginComplete) authorization();
+  },[srcState.testLoginComplete])
+  
+  
   return (
     <>
 
