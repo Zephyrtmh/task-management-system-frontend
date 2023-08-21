@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* navbar styling start */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  color: black;
+  outline-color: black;
+  outline-style: double;
+}
+
+.nav-links{
+  list-style-type: none;
+}
+
+.nav-links a {
+  color: black;
+  text-decoration: none;
+}
+
+/* LOGO */
+.logo {
+  font-size: 32px;
+}
+
+/* NAVBAR MENU */
+.menu {
+  display: flex;
+  gap: 1em;
+  font-size: 18px;
+}
+
+.menu li:hover {
+  background-color: lightskyblue;
+  border-radius: 5px;
+  transition: 0.3s ease;
+}
+
+.menu li {
+  padding: 5px 14px;
+}
+/* navbar styling end*/
+/*-------------------------------------*/
+/*footer styling start*/
+
+.footer{
+  outline-style: double;
+  outline-color: black;
+}
+
+
+
+/*footer styling end*/
+/*-------------------------------------*/
+/*Login form css start*/
+
+.loginForm{
+  padding: 20px;
+}
+
+
+
+
+/*Login form css end*/
+
+
