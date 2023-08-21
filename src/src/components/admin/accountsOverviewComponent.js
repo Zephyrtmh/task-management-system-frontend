@@ -22,44 +22,34 @@ function AccountsOverview() {
     
     async function getAllUsers(){
         try{
-            const res = await Axios.post('http://localhost:8080/allusers', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            const res = await Axios.post('http://localhost:8080/api/accounts/getAllAccounts', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            //console.log(res.data.accounts);
             if(res.data.success){
-                setUsers(res.data.users);
-                setGroups(res.data.groups);
+                setUsers(res.data.accounts);
+                //setGroups(res.data.groups);
                 setIsLoading(false);
             }
         }
         catch(err){
-          srcDispatch({type:"flashMessage", value:"Error getting users"});
+          // console.log(err);
+          // srcDispatch({type:"flashMessage", value:"Error getting users"});
         }
     }
 
-    useEffect(()=>{
-      const getUserInfo = async()=>{
-        try{
-          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
-          if(res.data.success){
-            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
-            if(!res.data.groups.includes("admin")){
-              return navigate("/")
-            }
-          }
-          else{
-            return navigate("/")
-          }
-        }
-        catch(e){
-          srcDispatch({type:"flashMessage", value:"Error getting users"});
-          return navigate("/")
-        }
+    async function authorization(){
+      if(srcState.isAdmin == false || srcState.logIn == false){
+        srcDispatch({type:"flashMessage", value:"Unauthorized"});
+        navigate("/")
       }
-      
-      getUserInfo();
-    }, [])
+    }
 
     useEffect(()=>{
       if(srcState.isAdmin) getAllUsers();
     },[srcState.isAdmin])
+
+    useEffect(()=>{
+      if(srcState.testLoginComplete) authorization();
+    },[srcState.testLoginComplete])
 
     if(isLoading){
       return(
@@ -103,8 +93,8 @@ function AccountsOverview() {
                           <td  className="whitespace-nowrap px-6 py-4 font-medium">{user.username}</td>
                           <td  className="whitespace-nowrap px-6 py-4">{user.email}</td>
                           <td  className="whitespace-nowrap px-6 py-4">{user.status == 1 ? `active` : `disabled`}</td>
-                          <td  className="whitespace-nowrap px-6 py-4">{groups.map((group, index)=>(
-                            user.username === group.fk_username ? <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{group.fk_groupName}</span> : ""
+                          <td  className="whitespace-nowrap px-6 py-4">{user.accgroupNames.map((group, index)=>(
+                            <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{group.groupName}</span>
                           ))}</td>
                           <td  className="whitespace-nowrap px-6 py-4"><Link to={"/admin/user/profile"} state={{ username: user.username }}>Edit user</Link></td>
                          </tr>

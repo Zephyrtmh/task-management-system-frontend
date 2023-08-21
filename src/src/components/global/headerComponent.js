@@ -18,7 +18,7 @@ function Header() {
   async function logoutFunc(){
 
     const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
-    if(logoutResult.data.success){
+    if(logoutResult.status === 200){
       //Clear localstorage
       localStorage.clear();
 
