@@ -5,6 +5,7 @@ import Axios from "axios"
 //context
 import StateContext from "../../StateContext"
 import DispatchContext from "../../DispatchContext"
+import IsLoadingComponent from "../global/isLoadingComponent"
 
 function EditApp() {
   //navigate
@@ -19,12 +20,13 @@ function EditApp() {
   const [rnumber, setRnumber] = useState()
   const [startDate, setStartDate] = useState()
   const [endDate, setEndDate] = useState()
-  const [create, setCreate] = useState()
-  const [open, setOpen] = useState()
-  const [toDo, setTodo] = useState()
-  const [doing, setDoing] = useState()
-  const [done, setDone] = useState()
+  const [create, setCreate] = useState("")
+  const [open, setOpen] = useState("")
+  const [toDo, setTodo] = useState("")
+  const [doing, setDoing] = useState("")
+  const [done, setDone] = useState("")
   const [groups, setGroups] = useState([])
+  const [isLoading, setIsLoading] = useState(true);
 
   //HandleSubmit
   async function onSubmit(e) {
@@ -70,43 +72,47 @@ function EditApp() {
     console.log(state.acronym);
     //Axios app
     const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
-
+    
     //Set app
     if (appResult.data.success) {
-      setAcronym(appResult.data.apps[0].App_Acronym)
-      setDescription(appResult.data.apps[0].App_Description)
-      setRnumber(appResult.data.apps[0].App_Rnumber)
-      setStartDate(appResult.data.apps[0].App_startDate)
-      setEndDate(appResult.data.apps[0].App_endDate)
-      setCreate(appResult.data.apps[0].App_permit_Create)
-      setOpen(appResult.data.apps[0].App_permit_Open)
-      setTodo(appResult.data.apps[0].App_permit_toDoList)
-      setDoing(appResult.data.apps[0].App_permit_Doing)
-      setDone(appResult.data.apps[0].App_permit_Done)
+      setAcronym(appResult.data.application.app_Acronym)
+      setDescription(appResult.data.application.app_Description)
+      setRnumber(appResult.data.application.app_Rnumber)
+      setStartDate(appResult.data.application.app_startDate)
+      setEndDate(appResult.data.application.app_endDate)
+      setCreate(appResult.data.application.app_permit_Create)
+      setOpen(appResult.data.application.app_permit_Open)
+      setTodo(appResult.data.application.app_permit_toDo)
+      setDoing(appResult.data.application.app_permit_Doing)
+      setDone(appResult.data.application.app_permit_Done)
 
-      console.log(appResult.data.apps[0].App_permit_Doing)
+      console.log(appResult.data.application.app_permit_Doing)
       //Set list
-      if (appResult.data.apps[0].App_permit_Create) document.getElementById("permitCreate").value = appResult.data.apps[0].App_permit_Create
-      if (appResult.data.apps[0].App_permit_Open) document.getElementById("permitOpen").value = appResult.data.apps[0].App_permit_Open
-      if (appResult.data.apps[0].App_permit_toDoList) document.getElementById("permitTodo").value = appResult.data.apps[0].App_permit_toDoList
-      if (appResult.data.apps[0].App_permit_Doing) document.getElementById("permitDoing").value = appResult.data.apps[0].App_permit_Doing
-      if (appResult.data.apps[0].App_permit_Done) document.getElementById("permitDone").value = appResult.data.apps[0].App_permit_Done
+      // if (appResult.data.application.app_permit_Create) document.getElementById("permitCreate").value = appResult.data.application.app_permit_Create
+      // if (appResult.data.application.app_permit_Open) document.getElementById("permitOpen").value = appResult.data.application.app_permit_Open
+      // if (appResult.data.application.app_permit_toDoList) document.getElementById("permitTodo").value = appResult.data.application.app_permit_toDoList
+      // if (appResult.data.application.app_permit_Doing) document.getElementById("permitDoing").value = appResult.data.application.app_permit_Doing
+      // if (appResult.data.application.app_permit_Done) document.getElementById("permitDone").value = appResult.data.application.app_permit_Done
+      if (appResult.data.application.app_permit_Create) setCreate(appResult.data.application.app_permit_Create)
+      if (appResult.data.application.app_permit_Open) setOpen(appResult.data.application.app_permit_Open)
+      if (appResult.data.application.app_permit_toDoList) setTodo(appResult.data.application.app_permit_toDo)
+      if (appResult.data.application.app_permit_Doing) setDoing(appResult.data.application.app_permit_Doing)
+      if (appResult.data.application.app_permit_Done) setDone(appResult.data.application.app_permit_Done)
     }
+    setIsLoading(false);
   }
 
   //Get groups
-  async function getGroups() {
+  async function getGroups(username) {
     try {
-      //Get all groups
-      const groupResult = await Axios.post("http://localhost:8080/allgroups", { un: srcState.username, gn: "project leader" }, { withCredentials: true })
-
-      //Set groups
+      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: username, gn: "project lead" }, { withCredentials: true })
       if (groupResult.data.success) {
+        console.log(groupResult.data.groups)
         setGroups(groupResult.data.groups)
       }
     } catch (e) {
       console.log(e)
-      navigate("/application-management")
+      //srcDispatch({type:"flashMessage", value:"Error in getting groups"});
     }
   }
 
@@ -123,29 +129,47 @@ function EditApp() {
 
   //useEffect
   useEffect(() => {
-    // const getUserInfo = async () => {
-    //   const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //   if (res.data.success) {
-    //     srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //   }
-    // }
-    // getUserInfo()
+    try {
+      const getUserInfo = async () => {
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+        if (res.data.success) {
+          if (res.data.status == 0) navigate("/login")
+          srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+          if (!(await res.data.groups.includes("project lead"))) {
+            srcDispatch({ type: "flashMessage", value: "Not authorized" })
+            navigate("/")
+          }
+
+          getGroups(res.data.username)
+          getApp()
+          
+        } else {
+          navigate("/")
+        }
+      }
+      getUserInfo()
+    } catch (err) {
+      console.log(err)
+    }
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      getGroups()
-    }
-  }, [srcState.username])
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     getGroups()
+  //   }
+  // }, [srcState.username])
 
-  useEffect(() => {
-    getApp()
-  }, [groups])
+  // useEffect(() => {
+  //   getApp()
+  // }, [groups])
 
   useEffect(()=>{
     if(srcState.testLoginComplete) authorization();
   },[srcState.testLoginComplete])
 
+  if(isLoading) {
+    return <IsLoadingComponent />
+  }
   return (
     <>
       <div className="container mx-auto mt-5">
@@ -218,16 +242,17 @@ function EditApp() {
                 Permit create (group)
               </label>
               <select
+                value={create}
                 onChange={e => setCreate(e.target.value)}
                 id="permitCreate"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -239,16 +264,17 @@ function EditApp() {
                 Permit open (group)
               </label>
               <select
+                value={open}
                 onChange={e => setOpen(e.target.value)}
                 id="permitOpen"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -260,16 +286,17 @@ function EditApp() {
                 Permit todo (group)
               </label>
               <select
+                value={toDo}
                 id="permitTodo"
                 onChange={e => setTodo(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -281,16 +308,17 @@ function EditApp() {
                 Permit doing (group)
               </label>
               <select
+                value={doing}
                 id="permitDoing"
                 onChange={e => setDoing(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -302,16 +330,17 @@ function EditApp() {
                 Permit done (group)
               </label>
               <select
+                value={done}
                 id="permitDone"
                 onChange={e => setDone(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }

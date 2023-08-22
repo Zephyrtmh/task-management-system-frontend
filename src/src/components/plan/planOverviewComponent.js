@@ -134,9 +134,8 @@ function PlanOverview() {
 
     //Axios get task by app acronym
     const taskResult = await Axios.post("http://localhost:8080/all-task/app", { appAcronym: state.acronym }, { withCredentials: true })
-    console.log("taskResults", Object.values(taskResult.data.tasks))
     
-    if (taskResult.data.success) {
+    if (taskResult.data.success && taskResult.data.tasks != null) {
       //Set onload to false
       setOnLoad(false)
       //console.log(taskResult.data.tasks);

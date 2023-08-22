@@ -46,7 +46,7 @@ function AppOverview() {
                 const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
                 if(res.data.success){
                     if(res.data.status == 0) navigate("/login");
-                    srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+                    srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project lead")});
                     
                 }
                 else{
