@@ -20,9 +20,9 @@ function AccountsOverview() {
     const srcDispatch = useContext(DispatchContext);
     const navigate = useNavigate();
     
-    async function getAllUsers(){
+    async function getAllUsers(username){
         try{
-            const res = await Axios.post('http://localhost:8080/api/accounts/getAllAccounts', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            const res = await Axios.post('http://localhost:8080/api/accounts/getAllAccounts', {un:username, gn:"admin"}, {withCredentials: true})
             //console.log(res.data.accounts);
             if(res.data.success){
                 setUsers(res.data.accounts);
@@ -69,7 +69,7 @@ function AccountsOverview() {
                   if(res.data.status == 0) logoutFunc();
                   srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
                   if(res.data.groups.includes("admin")){
-                    getAllUsers();
+                    getAllUsers(res.data.username);
                   }else{
                     navigate("/")
                   }
