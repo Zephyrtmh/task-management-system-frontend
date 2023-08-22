@@ -66,6 +66,23 @@ function AccountsOverview() {
       }
     }
 
+    useEffect(() => {
+      const getUserInfo = async () => {
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+        if (res.data.success) {
+          await srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+          if (!(await res.data.groups.includes("admin"))) {
+            srcDispatch( {type: "logout"})
+            return navigate("/")
+          } 
+        } else {
+          srcDispatch( {type: "logout"})
+          return navigate("/")
+        }
+      }
+      getUserInfo()
+    }, [])
+
     useEffect(()=>{
       const getUserInfo = async()=>{
           
