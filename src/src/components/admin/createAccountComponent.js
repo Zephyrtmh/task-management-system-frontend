@@ -1,104 +1,165 @@
-import React, { useEffect, useContext, useReducer, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useContext, useReducer, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 
 //Context
-import StateContext from "../../StateContext";
-import DispatchContext from "../../DispatchContext";
-import Axios from "axios";
+import StateContext from "../../StateContext"
+import DispatchContext from "../../DispatchContext"
+import Axios from "axios"
 
 function CreateAccount() {
+  const [username, setUsername] = useState()
+  const [password, setPassword] = useState()
+  const [email, setEmail] = useState()
+  const [allGroups, setAllGroups] = useState([])
+  const [groups, setGroups] = useState([])
+  const [status, setStatus] = useState(1)
+  const navigate = useNavigate()
 
-    const [username, setUsername] = useState();
-    const [password, setPassword] = useState();
-    const [email, setEmail] = useState();
-    const [allGroups, setAllGroups] = useState([]);
-    const [groups, setGroups] = useState([]);
-    const[status, setStatus] = useState(1);
-    const navigate = useNavigate();
+  //Contexts
+  const srcDispatch = useContext(DispatchContext)
+  const srcState = useContext(StateContext)
 
-    //Contexts
-    const srcDispatch = useContext(DispatchContext);
-    const srcState = useContext(StateContext);
+  //handleSubmit
+  async function handleSubmit(e) {
+    e.preventDefault()
+    try {
+      const passwordRegex = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9]).{8,10}$/
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      if (!passwordRegex.test(password)) {
+        //fail cases
+        srcDispatch({ type: "flashMessage", value: "Invalid password" })
+      }  
+      
+       else {
+        if(email && email.length !== 0) {
+          if (!emailRegex.test(email)) {
+            srcDispatch({ type: "flashMessage", value: "Invalid email" })
+        }}
+        const res = await Axios.post(
+          "http://localhost:8080/api/accounts/create",
+          { account: { username, password, email, status, groups }, un: srcState.username, gn: "admin", status },
+          { withCredentials: true }
+        )
+        console.log("after axios")
+        if (res.data.success) {
+          srcDispatch({ type: "flashMessage", value: "account created" })
+          //Reset useState fields and reset input fields
+          setUsername("")
+          setPassword("")
+          setEmail("")
+          setGroups([])
+          setStatus(1)
+          document.getElementById("floating_username").value = ""
+          document.getElementById("floating_email").value = ""
+          document.getElementById("floating_password").value = ""
+          document.getElementById("groups_multiple").value = ""
 
-    //handleSubmit
-    async function handleSubmit(e){
-        e.preventDefault();
+          navigate("/create/account")
+        } else {
+          srcDispatch({ type: "flashMessage", value: res.data.message })
+        }
+      }
+    } catch (e) {
+      console.log(e.response.data.message)
+      if (e.response.data.message === "Invalid password input") {
+        srcDispatch({ type: "flashMessage", value: "Invalid password, must contains 8 to 10 chars comprise of alphabets , numbers, and special character  " })
+      } else if (e.response.data.message === "Invalid email input") {
+        srcDispatch({ type: "flashMessage", value: "Invalid email" })
+      } else if (e.response.data.message === "Invalid username input") {
+        srcDispatch({ type: "flashMessage", value: "Invalid username" })
+      } else {
+        srcDispatch({ type: "flashMessage", value: "Username taken, please try again..." })
+      }
+    }
+  }
+
+  //Get all groups
+  async function getAllgroups() {
+    const res = await Axios.post("http://localhost:8080/getAllGroups", { un: srcState.username, gn: "admin" }, { withCredentials: true })
+    console.log(res.data)
+    if (res.data.groups) {
+      setAllGroups(res.data.groups)
+    }
+  }
+
+  //update selected group onChange
+  function handleGroupChange(tt) {
+    const updatedOptions = [...tt.target.options].filter(option => option.selected).map(x => ({ groupName: x.value }))
+    console.log(updatedOptions)
+
+    setGroups(updatedOptions)
+  }
+
+  async function authorization() {
+    console.log(srcState.isAdmin == false)
+    if (srcState.isAdmin == false || srcState.logIn == false) {
+      navigate("/")
+    }
+  }
+
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
+  //useEffect
+  // useEffect(() => {
+  //   if (srcState.testLoginComplete) authorization()
+  // }, [srcState.testLoginComplete])
+
+  useEffect(()=>{
+    const getUserInfo = async()=>{
+        
         try{
-            const res = await Axios.post("http://localhost:3000/register", {username, password, email, groups, un:srcState.username, gn:"admin", status}, {withCredentials:true});
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+            console.log("test login done success");
             if(res.data.success){
-                srcDispatch({type:"flashMessage", value:"account created"});
-                //Reset useState fields and reset input fields
-                setUsername("");
-                setPassword("");
-                setEmail("");
-                setGroups([]);
-                setStatus(1);
-                document.getElementById("floating_username").value ="";
-                document.getElementById("floating_email").value ="";
-                document.getElementById("floating_password").value ="";
-                document.getElementById("groups_multiple").value ="";
-
-                navigate("/create/account");
+                //console.log("USERRR", res.data.status)
+                if(res.data.status == 0) logoutFunc();
+                if(!res.data.groups.includes("admin")) navigate("/")
+                srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+                srcDispatch({type:"testLogin"});
+                
+            }
+            else{
+                dispatch({type:"logout"})
             }
         }
         catch(e){
-          console.log(e.response.data.message)
-          if(e.response.data.message === "Invalid password input"){
-            srcDispatch({type:"flashMessage", value:"Invalid password, must contains 8 to 10 chars comprise of alphabets , numbers, and special character  "});
-          }
-          else if(e.response.data.message === "Invalid email input"){
-            srcDispatch({type:"flashMessage", value:"Invalid email"});
-          }
-          else if(e.response.data.message === "Invalid username input"){
-            srcDispatch({type:"flashMessage", value:"Invalid username"});
-          }
-          else{
-            srcDispatch({type:"flashMessage", value:"Username taken, please try again..."});
-          }
+            console.log(e);
+            console.log("test login done but got error");
+            srcDispatch({type:"testLogin"});
         }
     }
+    getUserInfo();
+}, [])
 
-    //Get all groups
-    async function getAllgroups(){
-      const res = await Axios.post("http://localhost:3000/allgroups",{un:srcState.username, gn:"admin"},{withCredentials:true});
-        if(res.data.success){
-          setAllGroups(res.data.groups);
-        }
-    }
 
-    //update selected group onChange
-    function handleGroupChange(tt){
-      const updatedOptions = [...tt.target.options].filter(option => option.selected)
-      .map(x => x.value);
-      console.log(updatedOptions);
-      
-      setGroups(updatedOptions);
-  }
-
-    //useEffect
-    useEffect(()=>{
-      const getUserInfo = async()=>{
-        const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
-        if(res.data.success){
-            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
-            if(!await res.data.groups.includes("admin")){
-              return navigate("/")
-            }
-        }else{
-          return navigate("/")
-        }
-      }
-      getUserInfo();
-        
-    }, []);
-
-    useEffect(()=>{
-      if(srcState.isAdmin) getAllgroups();
-    },[srcState.isAdmin])
+  useEffect(() => {
+    if (srcState.isAdmin == true) getAllgroups()
+  }, [srcState.testLoginComplete])
 
   return (
     <>
-        <h1 className="p-5">Create account (Admin only)</h1>
+      <h1 className="p-5">Create account (Admin only)</h1>
       <form className="p-5" onSubmit={handleSubmit}>
         <div className="relative z-0 w-full mb-6 group">
           <input
@@ -107,7 +168,7 @@ function CreateAccount() {
             id="floating_username"
             className="block py-2.5 px-0 w-full text-sm text-stone-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-stone-900 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             placeholder=" "
-            onChange={(e)=>setUsername(e.target.value)}
+            onChange={e => setUsername(e.target.value)}
             required
           />
           <label
@@ -124,7 +185,7 @@ function CreateAccount() {
             id="floating_email"
             className="block py-2.5 px-0 w-full text-sm text-stone-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-stone-900 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             placeholder=" "
-            onChange={(e)=>setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
           />
           <label
             htmlFor="floating_email"
@@ -140,7 +201,7 @@ function CreateAccount() {
             id="floating_password"
             className="block py-2.5 px-0 w-full text-sm text-stone-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-stone-900 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             placeholder=" "
-            onChange={(e)=>setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
           />
           <label
@@ -151,23 +212,47 @@ function CreateAccount() {
           </label>
         </div>
         <div className="relative z-0 w-full mb-6 group">
-          <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-          <select id="countries" onChange={(e)=>{setStatus(e.target.value)}} class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-            <option value={1} selected>Active</option>
+          <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Status
+          </label>
+          <select
+            id="countries"
+            onChange={e => {
+              setStatus(e.target.value)
+            }}
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          >
+            <option value={1} selected>
+              Active
+            </option>
             <option value={0}>Disable</option>
           </select>
         </div>
         <div className="relative z-0 w-full mb-6 group">
-          <label for="groups_multiple" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select group/s</label>
-          <select multiple onChange={handleGroupChange} id="groups_multiple" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-            {allGroups.map((group, index)=>(
-              <option key={index} value={group.groupName}>{group.groupName}</option>
+          <label for="groups_multiple" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Select group/s
+          </label>
+          <select
+            multiple
+            onChange={handleGroupChange}
+            id="groups_multiple"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          >
+            {allGroups.map((group, index) => (
+              <option key={index} value={group}>
+                {group}
+              </option>
             ))}
           </select>
         </div>
 
-        <Link to="/user-management" className="text-white bg-stone-500 hover:bg-stone-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-stone-600 dark:hover:bg-stone-700 dark:focus:ring-blue-800 mr-5">Cancel</Link>
-       
+        <Link
+          to="/user-management"
+          className="text-white bg-stone-500 hover:bg-stone-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-stone-600 dark:hover:bg-stone-700 dark:focus:ring-blue-800 mr-5"
+        >
+          Cancel
+        </Link>
+
         <button
           type="submit"
           className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -176,7 +261,7 @@ function CreateAccount() {
         </button>
       </form>
     </>
-  );
+  )
 }
 
-export default CreateAccount;
+export default CreateAccount

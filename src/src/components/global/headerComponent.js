@@ -7,7 +7,11 @@ import StateContext from "../../StateContext";
 import DispatchContext from "../../DispatchContext";
 import FunctionContext from "../../FunctionContext";
 
+import IsLoadingComponent from "../global/isLoadingComponent";
+
 function Header() {
+
+  const [isLoading, setIsLoading] = useState(true);
  
   const srcContext = useContext(StateContext);
   const srcDispatch = useContext(DispatchContext);
@@ -17,8 +21,8 @@ function Header() {
   //Logout
   async function logoutFunc(){
 
-    const logoutResult = await Axios.post("http://localhost:3000/logout", {}, {withCredentials: true});
-    if(logoutResult.data.success){
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
       //Clear localstorage
       localStorage.clear();
 
@@ -46,7 +50,7 @@ function Header() {
         <ul className="nav-links">
 
           <div className="menu">
-            {srcContext.logIn ? <li><Link to="/application-management">Application management</Link></li> : ""}
+            {/* {srcContext.logIn ? <li><Link to="/application-management">Application management</Link></li> : ""} */}
             {srcContext.isAdmin ? <li><Link to="/user-management">User management page</Link></li> : ""}
 
             {srcContext.logIn ? <li><Link to="/profile">Profile</Link></li> : ""}
@@ -61,6 +65,7 @@ function Header() {
       </nav>
     </>
   );
+  
 }
 
 export default Header

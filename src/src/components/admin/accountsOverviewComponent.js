@@ -22,40 +22,96 @@ function AccountsOverview() {
     
     async function getAllUsers(){
         try{
-            const res = await Axios.post('http://localhost:3000/allusers', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            const res = await Axios.post('http://localhost:8080/api/accounts/getAllAccounts', {un:srcState.username, gn:"admin"}, {withCredentials: true})
+            //console.log(res.data.accounts);
             if(res.data.success){
-                setUsers(res.data.users);
-                setGroups(res.data.groups);
+                setUsers(res.data.accounts);
+                //setGroups(res.data.groups);
                 setIsLoading(false);
             }
         }
         catch(err){
-          srcDispatch({type:"flashMessage", value:"Error getting users"});
+          // console.log(err);
+          // srcDispatch({type:"flashMessage", value:"Error getting users"});
         }
     }
 
-    useEffect(()=>{
-      const getUserInfo = async()=>{
-        try{
-          const res = await Axios.post("http://localhost:3000/authtoken/return/userinfo", {},{withCredentials:true});
-          if(res.data.success){
-            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin")});
-            if(!res.data.groups.includes("admin")){
-              return navigate("/")
-            }
-          }
-          else{
+    async function logoutFunc(){
+
+      const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+      if(logoutResult.status === 200){
+        //Clear localstorage
+        localStorage.clear();
+  
+        //Set useState logIn to false
+        srcDispatch({type:"logout"});
+  
+        localStorage.removeItem('authToken');
+  
+        return navigate('/login');
+      }
+      //Clear localstorage
+      localStorage.clear();
+  
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+  
+      return navigate('/login');
+    }
+
+    async function authorization(){
+      if(srcState.isAdmin == false || srcState.logIn == false){
+        srcDispatch({type:"flashMessage", value:"Unauthorized"});
+        navigate("/")
+      }
+    }
+
+    useEffect(() => {
+      const getUserInfo = async () => {
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+        if (res.data.success) {
+          await srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+          if (!(await res.data.groups.includes("admin"))) {
+            srcDispatch( {type: "logout"})
             return navigate("/")
-          }
-        }
-        catch(e){
-          srcDispatch({type:"flashMessage", value:"Error getting users"});
+          } 
+        } else {
+          srcDispatch( {type: "logout"})
           return navigate("/")
         }
       }
-      
-      getUserInfo();
+      getUserInfo()
     }, [])
+
+    useEffect(()=>{
+      const getUserInfo = async()=>{
+          
+          try{
+              const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+              console.log("test login done success");
+              if(res.data.success){
+                  //console.log("USERRR", res.data.status)
+                  if(res.data.status == 0) logoutFunc();
+                  //console.log("userstatus", res.data.status)
+                  srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+                  srcDispatch({type:"testLogin"});
+                  
+              }
+              else{
+                  dispatch({type:"logout"})
+              }
+          }
+          catch(e){
+              console.log("test login done but got error");
+              srcDispatch({type:"testLogin"});
+          }
+      }
+      getUserInfo();
+  }, [])
+
+    useEffect(()=>{
+      if(srcState.testLoginComplete) authorization();
+    },[srcState.testLoginComplete])
 
     useEffect(()=>{
       if(srcState.isAdmin) getAllUsers();
@@ -103,8 +159,8 @@ function AccountsOverview() {
                           <td  className="whitespace-nowrap px-6 py-4 font-medium">{user.username}</td>
                           <td  className="whitespace-nowrap px-6 py-4">{user.email}</td>
                           <td  className="whitespace-nowrap px-6 py-4">{user.status == 1 ? `active` : `disabled`}</td>
-                          <td  className="whitespace-nowrap px-6 py-4">{groups.map((group, index)=>(
-                            user.username === group.fk_username ? <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{group.fk_groupName}</span> : ""
+                          <td  className="whitespace-nowrap px-6 py-4">{user.accgroupNames.map((group, index)=>(
+                            <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{group.groupName}</span>
                           ))}</td>
                           <td  className="whitespace-nowrap px-6 py-4"><Link to={"/admin/user/profile"} state={{ username: user.username }}>Edit user</Link></td>
                          </tr>
