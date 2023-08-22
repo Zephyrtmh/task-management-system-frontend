@@ -36,6 +36,29 @@ function AccountsOverview() {
         }
     }
 
+    async function logoutFunc(){
+
+      const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+      if(logoutResult.status === 200){
+        //Clear localstorage
+        localStorage.clear();
+  
+        //Set useState logIn to false
+        srcDispatch({type:"logout"});
+  
+        localStorage.removeItem('authToken');
+  
+        return navigate('/login');
+      }
+      //Clear localstorage
+      localStorage.clear();
+  
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+  
+      return navigate('/login');
+    }
+
     async function authorization(){
       if(srcState.isAdmin == false || srcState.logIn == false){
         srcDispatch({type:"flashMessage", value:"Unauthorized"});
@@ -61,12 +84,38 @@ function AccountsOverview() {
     }, [])
 
     useEffect(()=>{
-      if(srcState.isAdmin) getAllUsers();
-    },[srcState.isAdmin])
+      const getUserInfo = async()=>{
+          
+          try{
+              const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+              console.log("test login done success");
+              if(res.data.success){
+                  console.log("USERRR", res.data.status)
+                  if(res.data.status == 0) logoutFunc();
+                  //console.log("userstatus", res.data.status)
+                  srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+                  srcDispatch({type:"testLogin"});
+                  
+              }
+              else{
+                  dispatch({type:"logout"})
+              }
+          }
+          catch(e){
+              console.log("test login done but got error");
+              srcDispatch({type:"testLogin"});
+          }
+      }
+      getUserInfo();
+  }, [])
 
     useEffect(()=>{
       if(srcState.testLoginComplete) authorization();
     },[srcState.testLoginComplete])
+
+    useEffect(()=>{
+      if(srcState.isAdmin) getAllUsers();
+    },[srcState.isAdmin])
 
     if(isLoading){
       return(

@@ -95,13 +95,13 @@ function CreateAccount() {
   }
 
   //useEffect
-  useEffect(() => {
-    if (srcState.testLoginComplete) authorization()
-  }, [srcState.testLoginComplete])
+  // useEffect(() => {
+  //   if (srcState.testLoginComplete) authorization()
+  // }, [srcState.testLoginComplete])
 
   useEffect(() => {
-    if (srcState.isAdmin) getAllgroups()
-  }, [srcState.isAdmin])
+    if (srcState.isAdmin == true) getAllgroups()
+  }, [srcState.testLoginComplete])
 
   return (
     <>

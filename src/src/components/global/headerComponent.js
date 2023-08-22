@@ -7,7 +7,11 @@ import StateContext from "../../StateContext";
 import DispatchContext from "../../DispatchContext";
 import FunctionContext from "../../FunctionContext";
 
+import IsLoadingComponent from "../global/isLoadingComponent";
+
 function Header() {
+
+  const [isLoading, setIsLoading] = useState(true);
  
   const srcContext = useContext(StateContext);
   const srcDispatch = useContext(DispatchContext);
@@ -61,6 +65,7 @@ function Header() {
       </nav>
     </>
   );
+  
 }
 
 export default Header

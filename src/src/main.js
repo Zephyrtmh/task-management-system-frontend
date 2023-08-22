@@ -110,35 +110,6 @@ function MainComponent() {
 
     }
 
-    //useEffect
-    useEffect(()=>{
-        const getUserInfo = async()=>{
-            
-            try{
-                const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
-                console.log("test login done success");
-                if(res.data.success){
-                    if(res.data.status == 0) logoutFunc();
-                    //console.log("userstatus", res.data.status)
-                    dispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
-                    dispatch({type:"testLogin"});
-                    
-                }
-                else{
-                    dispatch({type:"logout"})
-                }
-            }
-            catch(e){
-                //console.log(e.response.status);
-                // if(e.response.status == 403){
-                    
-                // }
-                console.log("test login done but got error");
-                dispatch({type:"testLogin"});
-            }
-        }
-        getUserInfo();
-    }, [])
 
   return (
     <StateContext.Provider value={state}>
