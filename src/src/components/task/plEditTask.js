@@ -49,7 +49,7 @@ function PlEditTask() {
       console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
       //console.log(newState)
       const result = await Axios.post(
-        "http://localhost:8080/pl-update/task",
+        "http://localhost:8080/PLEditTask",
         { taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan },
         { withCredentials: true }
       )
@@ -172,17 +172,20 @@ function PlEditTask() {
       if (res.data.success) {
         if (res.data.status == 0) navigate("/login")
         srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+
+        getPlans()
+        getTask()
       }
     }
     getUserInfo()
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      getPlans()
-      getTask()
-    }
-  }, [srcState.username])
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     getPlans()
+  //     getTask()
+  //   }
+  // }, [srcState.username])
 
   if (onLoad) {
     return (
@@ -339,7 +342,6 @@ function PlEditTask() {
                             </tr>
                           </thead>
                           <tbody className="h-96 overflow-y-auto">
-                            //TODO: fix bug with notes
                             {historyNotes.map((note, index) => (
                               <tr key={index} className="p-2">
                                 <td className="bg-stone-100">{note[0]}</td>

@@ -237,33 +237,34 @@ function PlanOverview() {
 
   //useEffect
   useEffect(() => {
-    // const getUserInfo = async () => {
-    //   if (state == null) {
-    //     return navigate("/")
-    //   }
-    //   if (state.acronym == null) {
-    //     return navigate("/")
-    //   }
+    const getUserInfo = async () => {
+      if (state == null) {
+        return navigate("/")
+      }
+      if (state.acronym == null) {
+        return navigate("/")
+      }
 
-    //   const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //   if (res.data.success) {
-    //     if (res.data.status == 0) navigate("/login")
-    //     srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //     setAcronym(state.acronym)
-    //     //console.log(state.acronym)
-    //   } else {
-    //     navigate("/")
-    //   }
-    // }
-    // getUserInfo()
+      const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+      if (res.data.success) {
+        if (res.data.status == 0) navigate("/login")
+        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        setAcronym(state.acronym)
+        //console.log(state.acronym)
+        getApp();
+      } else {
+        navigate("/")
+      }
+    }
+    getUserInfo()
   }, [])
 
-  useEffect(() => {
-    console.log("acronym: ", acronym)
-    if (acronym != undefined) {
-      getApp()
-    }
-  }, [acronym])
+  // useEffect(() => {
+  //   console.log("acronym: ", acronym)
+  //   if (acronym != undefined) {
+  //     getApp()
+  //   }
+  // }, [acronym])
 
   useEffect(() => {
     if (srcState.username != "nil") {
