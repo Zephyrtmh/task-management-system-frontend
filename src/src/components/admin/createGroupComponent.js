@@ -17,6 +17,29 @@ function CreateGroup() {
   const srcDispatch = useContext(DispatchContext)
   const navigate = useNavigate()
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //Handle Submit
   async function handleSubmit(e) {
     e.preventDefault()
@@ -26,6 +49,7 @@ function CreateGroup() {
         srcDispatch({ type: "flashMessage", value: "Enter group name" })
       } else {
         const res = await Axios.post("http://localhost:8080/createAccGroup", { groupName: trimmedgroup, un: srcState.username, gn: "admin" }, { withCredentials: true })
+        console.log(res.data)
         if (res.data.success) {
           console.log("res ", res)
           srcDispatch({ type: "flashMessage", value: "Group created" })
@@ -34,7 +58,8 @@ function CreateGroup() {
           document.getElementById("groupName").value = ""
           getAllGroups()
         } else {
-          srcDispatch({ type: "flashMessage", value: "Group exist, enter another group name" })
+          srcDispatch({ type: "flashMessage", value: "Unable to create group" })
+          if(!srcState.isAdmin || res.data.message === "status inactive") return logoutFunc();
         }
       }
     } catch (e) {

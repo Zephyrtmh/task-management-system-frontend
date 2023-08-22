@@ -73,7 +73,7 @@ function AccountsOverview() {
               const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
               console.log("test login done success");
               if(res.data.success){
-                  console.log("USERRR", res.data.status)
+                  //console.log("USERRR", res.data.status)
                   if(res.data.status == 0) logoutFunc();
                   //console.log("userstatus", res.data.status)
                   srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});

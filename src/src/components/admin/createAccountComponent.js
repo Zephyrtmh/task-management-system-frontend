@@ -28,16 +28,19 @@ function CreateAccount() {
       if (!passwordRegex.test(password)) {
         //fail cases
         srcDispatch({ type: "flashMessage", value: "Invalid password" })
-      } else if (email && email.length !== 0) {
-        if (!emailRegex.test(email)) {
-          srcDispatch({ type: "flashMessage", value: "Invalid email" })
-        }
-      } else {
+      }  
+      
+       else {
+        if(email && email.length !== 0) {
+          if (!emailRegex.test(email)) {
+            srcDispatch({ type: "flashMessage", value: "Invalid email" })
+        }}
         const res = await Axios.post(
           "http://localhost:8080/api/accounts/create",
           { account: { username, password, email, status, groups }, un: srcState.username, gn: "admin", status },
           { withCredentials: true }
         )
+        console.log("after axios")
         if (res.data.success) {
           srcDispatch({ type: "flashMessage", value: "account created" })
           //Reset useState fields and reset input fields
@@ -94,10 +97,61 @@ function CreateAccount() {
     }
   }
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //useEffect
   // useEffect(() => {
   //   if (srcState.testLoginComplete) authorization()
   // }, [srcState.testLoginComplete])
+
+  useEffect(()=>{
+    const getUserInfo = async()=>{
+        
+        try{
+            const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+            console.log("test login done success");
+            if(res.data.success){
+                //console.log("USERRR", res.data.status)
+                if(res.data.status == 0) logoutFunc();
+                if(!res.data.groups.includes("admin")) navigate("/")
+                srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+                srcDispatch({type:"testLogin"});
+                
+            }
+            else{
+                dispatch({type:"logout"})
+            }
+        }
+        catch(e){
+            console.log(e);
+            console.log("test login done but got error");
+            srcDispatch({type:"testLogin"});
+        }
+    }
+    getUserInfo();
+}, [])
+
 
   useEffect(() => {
     if (srcState.isAdmin == true) getAllgroups()

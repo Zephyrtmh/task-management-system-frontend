@@ -114,6 +114,10 @@ function AdminEditUser() {
         srcDispatch({ type: "flashMessage", value: "profile updated" })
         return navigate("/user-management")
       }
+      else{
+        srcDispatch({ type: "flashMessage", value: "unauthorized" })
+        return navigate("/")
+      }
     } catch (e) {
       srcDispatch({ type: "flashMessage", value: "Error in updating profile" })
     }

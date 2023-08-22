@@ -50,7 +50,7 @@ function Header() {
         <ul className="nav-links">
 
           <div className="menu">
-            {srcContext.logIn ? <li><Link to="/application-management">Application management</Link></li> : ""}
+            {/* {srcContext.logIn ? <li><Link to="/application-management">Application management</Link></li> : ""} */}
             {srcContext.isAdmin ? <li><Link to="/user-management">User management page</Link></li> : ""}
 
             {srcContext.logIn ? <li><Link to="/profile">Profile</Link></li> : ""}

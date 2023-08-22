@@ -16,7 +16,7 @@ function GlobalLandingPage() {
 
 
     async function authorization(){
-        if(srcState.isAdmin == false || srcState.logIn == false){
+        if(srcState.logIn == false){
           srcDispatch({type:"flashMessage", value:"Unauthorized"});
           navigate("/")
         }
