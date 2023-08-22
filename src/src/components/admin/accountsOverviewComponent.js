@@ -59,46 +59,24 @@ function AccountsOverview() {
       return navigate('/login');
     }
 
-    async function authorization(){
-      if(srcState.isAdmin == false || srcState.logIn == false){
-        srcDispatch({type:"flashMessage", value:"Unauthorized"});
-        navigate("/")
-      }
-    }
-
-    useEffect(() => {
-      const getUserInfo = async () => {
-        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-        if (res.data.success) {
-          await srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-          if (!(await res.data.groups.includes("admin"))) {
-            srcDispatch( {type: "logout"})
-            return navigate("/")
-          } 
-        } else {
-          srcDispatch( {type: "logout"})
-          return navigate("/")
-        }
-      }
-      getUserInfo()
-    }, [])
-
     useEffect(()=>{
       const getUserInfo = async()=>{
           
           try{
               const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
-              console.log("test login done success");
+              console.log(res.data.groups.includes("admin"));
               if(res.data.success){
-                  //console.log("USERRR", res.data.status)
                   if(res.data.status == 0) logoutFunc();
-                  //console.log("userstatus", res.data.status)
                   srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
-                  srcDispatch({type:"testLogin"});
+                  if(res.data.groups.includes("admin")){
+                    getAllUsers();
+                  }else{
+                    navigate("/")
+                  }
                   
               }
               else{
-                  dispatch({type:"logout"})
+                  logoutFunc()
               }
           }
           catch(e){
@@ -109,13 +87,6 @@ function AccountsOverview() {
       getUserInfo();
   }, [])
 
-    useEffect(()=>{
-      if(srcState.testLoginComplete) authorization();
-    },[srcState.testLoginComplete])
-
-    useEffect(()=>{
-      if(srcState.isAdmin) getAllUsers();
-    },[srcState.isAdmin])
 
     if(isLoading){
       return(
