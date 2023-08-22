@@ -61,6 +61,7 @@ function MainComponent() {
                 draft.group = action.value.groups
                 draft.isPL = action.isPL
                 draft.ableToAccessApp = action.value.planAssoisated
+                draft.testLoginComplete = true
                 return
             case"logout":
                 draft.logIn = false
