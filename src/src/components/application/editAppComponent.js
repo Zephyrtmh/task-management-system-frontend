@@ -94,7 +94,7 @@ function EditApp() {
       // if (appResult.data.application.app_permit_Done) document.getElementById("permitDone").value = appResult.data.application.app_permit_Done
       if (appResult.data.application.app_permit_Create) setCreate(appResult.data.application.app_permit_Create)
       if (appResult.data.application.app_permit_Open) setOpen(appResult.data.application.app_permit_Open)
-      if (appResult.data.application.app_permit_toDo) setTodo(appResult.data.application.app_permit_toDo)
+      if (appResult.data.application.app_permit_toDoList) setTodo(appResult.data.application.app_permit_toDoList)
       if (appResult.data.application.app_permit_Doing) setDoing(appResult.data.application.app_permit_Doing)
       if (appResult.data.application.app_permit_Done) setDone(appResult.data.application.app_permit_Done)
     }

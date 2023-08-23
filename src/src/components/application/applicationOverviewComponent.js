@@ -134,7 +134,7 @@ function AppOverview() {
                             appName={app.app_Acronym}
                             open={app.app_permit_Open}
                             create={app.app_permit_Create}
-                            todo={app.app_permit_toDo}
+                            todo={app.app_permit_toDoList}
                             doing={app.app_permit_Doing}
                             done={app.app_permit_Done}
                           />
