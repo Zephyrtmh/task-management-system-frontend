@@ -44,19 +44,25 @@ function TeamEditTask() {
   async function onSubmit(e) {
     e.preventDefault()
     try {
-      var permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
+      // var permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
+      var permit_g = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
+      console.log("permit g ", permit_g.data.application)
       let gn
 
       //Get group for check group
       if (verbState === "promote" && newState === "doing") {
-        gn = permit_g.data.apps[0].App_permit_toDoList
+        // gn = permit_g.data.apps[0].App_permit_toDoList
+        gn = permit_g.data.application.app_permit_toDoList
       } else {
-        console.log("done state", permit_g.data.apps[0].App_permit_Doing)
-        gn = permit_g.data.apps[0].App_permit_Doing
+        // console.log("done state", permit_g.data.apps[0].App_permit_Doing)
+        console.log("done state", permit_g.data.application.app_permit_Doing)
+        // gn = permit_g.data.apps[0].App_permit_Doing
+        gn = permit_g.data.application.app_permit_Doing
       }
       const result = await Axios.post(
         "http://localhost:8080/team-update/task",
-        { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
+        // { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
+        { taskId: state.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: state.acronym, taskPlan },
         { withCredentials: true }
       )
 
@@ -94,7 +100,7 @@ function TeamEditTask() {
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
       console.log("task result " , taskResult)
-      console.log("task result " , taskResult.data.success)
+      console.log("task result.data.success " , taskResult.data.success)
       console.log("state.newState ", state.newState)
       console.log("taskResult.data.task[0].Task_state ", taskResult.data.task.taskPlan)
       if (taskResult.data.success) {
