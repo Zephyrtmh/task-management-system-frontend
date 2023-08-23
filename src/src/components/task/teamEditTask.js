@@ -44,24 +44,19 @@ function TeamEditTask() {
   async function onSubmit(e) {
     e.preventDefault()
     try {
-      // var permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
       var permit_g = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
       console.log("permit g ", permit_g.data.application)
       let gn
 
       //Get group for check group
       if (verbState === "promote" && newState === "doing") {
-        // gn = permit_g.data.apps[0].App_permit_toDoList
         gn = permit_g.data.application.app_permit_toDoList
       } else {
-        // console.log("done state", permit_g.data.apps[0].App_permit_Doing)
         console.log("done state", permit_g.data.application.app_permit_Doing)
-        // gn = permit_g.data.apps[0].App_permit_Doing
         gn = permit_g.data.application.app_permit_Doing
       }
       const result = await Axios.post(
         "http://localhost:8080/team-update/task",
-        // { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
         { taskId: state.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: state.acronym, taskPlan },
         { withCredentials: true }
       )
@@ -99,37 +94,27 @@ function TeamEditTask() {
     //axios task id
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
-      console.log("task result " , taskResult)
-      console.log("task result.data.success " , taskResult.data.success)
-      console.log("state.newState ", state.newState)
-      console.log("taskResult.data.task[0].Task_state ", taskResult.data.task.taskPlan)
+
       if (taskResult.data.success) {
-        // setThisTask(taskResult.data.task[0])
         setThisTask(taskResult.data.task)
         console.log("task result data task [0] ",taskResult.data.task)
 
         //Re-arranging the history notes
-        // var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
         var tempHistory = String(taskResult.data.task.taskNotes).split("||")
         console.log("temp history ", tempHistory)
         tempHistory = tempHistory.reverse()
         for (const k in tempHistory) {
           setHistoryNotes(setHistoryNotes => [...setHistoryNotes, String(tempHistory[k]).split("|")])
         }
-        // setTaskPlan(taskResult.data.task[0].Task_plan)
         setTaskPlan(taskResult.data.task.taskPlan)
 
         //Set new state
         if (state.newState === "edit") {
-          // setNewState(taskResult.data.task[0].Task_state)
           setNewState(taskResult.data.task.taskState)
-        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
         } else if (state.newState === "promote" && taskResult.data.task.taskState === "todo") {
           setNewState("doing")
-        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
         } else if (state.newState === "promote" && taskResult.data.task.taskState === "doing") {
           setNewState("done")
-        // } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
         } else if (state.newState === "return" && taskResult.data.task.taskState === "doing") {
           setNewState("todo")
         }
@@ -158,7 +143,6 @@ function TeamEditTask() {
   //Get plans by acronym
   async function getPlans() {
     try {
-      // const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
       const planResult = await Axios.post("http://localhost:8080/all-plan/app", { appAcronym: state.acronym }, { withCredentials: true })
 
       console.log("plan result ", planResult.data.plans)
@@ -232,8 +216,6 @@ function TeamEditTask() {
               </label>
               <input
                 type="text"
-                // value={thisTask.Task_name}
-                // value={thisTask.Task_app_Acronym}
                 value={state.acronym}
                 
                 id="taskName"
@@ -248,7 +230,6 @@ function TeamEditTask() {
                 Task description
               </label>
               <textarea
-                // value={thisTask.Task_description}
                 value={thisTask.taskDescription}
                 id="desc"
                 rows="4"
@@ -284,17 +265,13 @@ function TeamEditTask() {
                 
                   <option value=""></option>
                   {plans.map((plan, index) => {
-                    // if (taskPlan === plan.Plan_MVP_name) {
                       if (taskPlan === plan.plan_MVP_name) {
                       return (
-                        // <option value={plan.Plan_MVP_name} selected>
-                        //   {plan.Plan_MVP_name}
                         <option value={plan.plan_MVP_name} selected>
                         {plan.plan_MVP_name}
                         </option>
                       )
                     } else {
-                      // return <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
                       return <option value={plan.plan_MVP_name}>{plan.plan_MVP_name}</option>
 
                     }
@@ -304,7 +281,6 @@ function TeamEditTask() {
               <div>
                 <p>
                   <span className="text-md font-semibold">Application acronym: </span>
-                  {/* {thisTask.Task_app_Acronym} */}
                   {state.acronym}
                 </p>
                 <p>
@@ -313,17 +289,14 @@ function TeamEditTask() {
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task creator </span>
-                  {/* {thisTask.Task_creator} */}
                   {thisTask.taskCreator}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task owner: </span>
-                  {/* {thisTask.Task_owner} */}
                   {thisTask.taskOwner}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Current task state: </span>
-                  {/* {thisTask.Task_state} */}
                   {thisTask.taskState}
                 </p>
               </div>
