@@ -35,7 +35,7 @@ function CreatePlan() {
     //create plan
     try {
       const result = await Axios.post(
-        "http://localhost:8080/create-plan",
+        "http://localhost:8080/createPlan",
         { planName, startDate: planStartDate, endDate: planEndDate, appAcronym: acronym, colour: planColour, un: srcState.username, gn },
         { withCredentials: true }
       )
@@ -57,22 +57,22 @@ function CreatePlan() {
       }
     } catch (err) {
       //console.log(err.response.data.err.code)
-      if (err.response.data.message === "missing input") {
-        srcDispatch({ type: "flashMessage", value: "Missing input" })
-      } else if (err.response.data.message === "invalid end date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid end date" })
-      } else if (err.response.data.message === "invalid application") {
-        srcDispatch({ type: "flashMessage", value: "Invalid application" })
-      } else if (err.response.data.message === "date invalid") {
-        srcDispatch({ type: "flashMessage", value: "Plan start and end date must be in application start and end date" })
-      } else if (err.response.data.message === "not authorized") {
-        srcDispatch({ type: "flashMessage", value: "Not authorized" })
-        navigate(-1)
-      } else if (err.response.data.err.code === "ER_DUP_ENTRY") {
-        srcDispatch({ type: "flashMessage", value: "Plan name exist" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Create plan error" })
-      }
+      // if (err.response.data.message === "missing input") {
+      //   srcDispatch({ type: "flashMessage", value: "Missing input" })
+      // } else if (err.response.data.message === "invalid end date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid end date" })
+      // } else if (err.response.data.message === "invalid application") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid application" })
+      // } else if (err.response.data.message === "date invalid") {
+      //   srcDispatch({ type: "flashMessage", value: "Plan start and end date must be in application start and end date" })
+      // } else if (err.response.data.message === "not authorized") {
+      //   srcDispatch({ type: "flashMessage", value: "Not authorized" })
+      //   navigate(-1)
+      // } else if (err.response.data.err.code === "ER_DUP_ENTRY") {
+      //   srcDispatch({ type: "flashMessage", value: "Plan name exist" })
+      // } else {
+      //   srcDispatch({ type: "flashMessage", value: "Create plan error" })
+      // }
     }
   }
 
@@ -88,7 +88,9 @@ function CreatePlan() {
       srcDispatch({ type: "flashMessage", value: "Invalid app acronym" })
       navigate(-1)
     }
-    setGn(appResult.data.apps[0].App_permit_Open)
+    setGn(appResult.data.application.app_permit_Open)
+    setAppStartDate(new Date(appResult.data.application.app_startDate).toISOString().substring(0, 10));
+    setAppEndDate(new Date(appResult.data.application.app_endDate).toISOString().substring(0, 10));
   }
 
   //context
@@ -112,45 +114,47 @@ function CreatePlan() {
 
   //useEffect
   useEffect(() => {
-    // const getUserInfo = async () => {
-    //   //Check if state is null
-    //   if (state == null) {
-    //     return navigate(-1)
-    //   }
-    //   if (!state.aOpen || state.aOpen == null) {
-    //     return navigate(-1)
-    //   }
-    //   if (!state.appStartDate || state.appStartDate == null) {
-    //     return navigate(-1)
-    //   }
-    //   if (!state.appEndDate || state.appEndDate == null) {
-    //     return navigate(-1)
-    //   }
-    //   //Get user info
-    //   const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //   if (res.data.success) {
-    //     if (res.data.status == 0) navigate("/login")
-    //     srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //     setAcronym(state.acronym)
-    //     //Set app start date and end date
-    //     setAppStartDate(state.appStartDate)
-    //     setAppEndDate(state.appEndDate)
-    //   } else {
-    //     navigate("/")
-    //   }
-    // }
-    // getUserInfo()
+    const getUserInfo = async () => {
+      //Check if state is null
+      if (state == null) {
+        return navigate(-1)
+      }
+      if (!state.aOpen || state.aOpen == null) {
+        return navigate(-1)
+      }
+      if (!state.appStartDate || state.appStartDate == null) {
+        return navigate(-1)
+      }
+      if (!state.appEndDate || state.appEndDate == null) {
+        return navigate(-1)
+      }
+      //Get user info
+      const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+      if (res.data.success) {
+        if (res.data.status == 0) navigate("/login")
+        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        setAcronym(state.acronym)
+        //Set app start date and end date
+        setAppStartDate(state.appStartDate)
+        setAppEndDate(state.appEndDate)
+
+        checkApp(res.data.username);
+      } else {
+        navigate("/")
+      }
+    }
+    getUserInfo()
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      checkApp()
-    }
-  }, [srcState.username])
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     checkApp()
+  //   }
+  // }, [srcState.username])
 
-  useEffect(()=>{
-    if(srcState.testLoginComplete) authorization();
-  },[srcState.testLoginComplete])
+  // useEffect(()=>{
+  //   if(srcState.testLoginComplete) authorization();
+  // },[srcState.testLoginComplete])
 
   return (
     <>
