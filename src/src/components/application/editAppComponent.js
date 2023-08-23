@@ -15,11 +15,11 @@ function EditApp() {
   const { state } = useLocation()
 
   //useState fields
-  const [acronym, setAcronym] = useState()
-  const [description, setDescription] = useState()
-  const [rnumber, setRnumber] = useState()
-  const [startDate, setStartDate] = useState()
-  const [endDate, setEndDate] = useState()
+  const [acronym, setAcronym] = useState("")
+  const [description, setDescription] = useState("")
+  const [rnumber, setRnumber] = useState(0)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [create, setCreate] = useState("")
   const [open, setOpen] = useState("")
   const [toDo, setTodo] = useState("")
@@ -34,7 +34,7 @@ function EditApp() {
     console.log(acronym, description, rnumber, startDate, endDate, create, open, toDo, doing, done)
     try {
       const result = await Axios.post(
-        "http://localhost:8080/update/application",
+        "http://localhost:8080/updateApplication",
         { acronym, description, endDate, permitCreate: create, permitOpen: open, permitTodo: toDo, permitDoing: doing, permitDone: done, un: srcState.username, gn: "project leader" },
         { withCredentials: true }
       )
@@ -45,25 +45,25 @@ function EditApp() {
       }
     } catch (err) {
       console.log(err.response.data.message)
-      if (err.response.data.message === "End date invalid") {
-        srcDispatch({ type: "flashMessage", value: "Invalid end date" })
-      } else if (err.response.data.message === "Input require fields") {
-        srcDispatch({ type: "flashMessage", value: "Input fields required" })
-      } else if (err.response.data.message === "invalid start date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid start date" })
-      } else if (err.response.data.message === "invalid group open") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
-      } else if (err.response.data.message === "invalid group toDo") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
-      } else if (err.response.data.message === "invalid group doing") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
-      } else if (err.response.data.message === "invalid group done") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
-      } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
-        srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Update application error" })
-      }
+      // if (err.response.data.message === "End date invalid") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid end date" })
+      // } else if (err.response.data.message === "Input require fields") {
+      //   srcDispatch({ type: "flashMessage", value: "Input fields required" })
+      // } else if (err.response.data.message === "invalid start date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid start date" })
+      // } else if (err.response.data.message === "invalid group open") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
+      // } else if (err.response.data.message === "invalid group toDo") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
+      // } else if (err.response.data.message === "invalid group doing") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
+      // } else if (err.response.data.message === "invalid group done") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
+      // } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
+      //   srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
+      // } else {
+      //   srcDispatch({ type: "flashMessage", value: "Update application error" })
+      // }
     }
   }
 
@@ -80,13 +80,12 @@ function EditApp() {
       setRnumber(appResult.data.application.app_Rnumber)
       setStartDate(appResult.data.application.app_startDate)
       setEndDate(appResult.data.application.app_endDate)
-      setCreate(appResult.data.application.app_permit_Create)
-      setOpen(appResult.data.application.app_permit_Open)
-      setTodo(appResult.data.application.app_permit_toDo)
-      setDoing(appResult.data.application.app_permit_Doing)
-      setDone(appResult.data.application.app_permit_Done)
+      // setCreate(appResult.data.application.app_permit_Create)
+      // setOpen(appResult.data.application.app_permit_Open)
+      // setTodo(appResult.data.application.app_permit_toDo)
+      // setDoing(appResult.data.application.app_permit_Doing)
+      // setDone(appResult.data.application.app_permit_Done)
 
-      console.log(appResult.data.application.app_permit_Doing)
       //Set list
       // if (appResult.data.application.app_permit_Create) document.getElementById("permitCreate").value = appResult.data.application.app_permit_Create
       // if (appResult.data.application.app_permit_Open) document.getElementById("permitOpen").value = appResult.data.application.app_permit_Open
@@ -95,7 +94,7 @@ function EditApp() {
       // if (appResult.data.application.app_permit_Done) document.getElementById("permitDone").value = appResult.data.application.app_permit_Done
       if (appResult.data.application.app_permit_Create) setCreate(appResult.data.application.app_permit_Create)
       if (appResult.data.application.app_permit_Open) setOpen(appResult.data.application.app_permit_Open)
-      if (appResult.data.application.app_permit_toDoList) setTodo(appResult.data.application.app_permit_toDo)
+      if (appResult.data.application.app_permit_toDo) setTodo(appResult.data.application.app_permit_toDo)
       if (appResult.data.application.app_permit_Doing) setDoing(appResult.data.application.app_permit_Doing)
       if (appResult.data.application.app_permit_Done) setDone(appResult.data.application.app_permit_Done)
     }
@@ -105,7 +104,7 @@ function EditApp() {
   //Get groups
   async function getGroups(username) {
     try {
-      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: username, gn: "project lead" }, { withCredentials: true })
+      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: username, gn: "project leader" }, { withCredentials: true })
       if (groupResult.data.success) {
         console.log(groupResult.data.groups)
         setGroups(groupResult.data.groups)
@@ -135,7 +134,7 @@ function EditApp() {
         if (res.data.success) {
           if (res.data.status == 0) navigate("/login")
           srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-          if (!(await res.data.groups.includes("project lead"))) {
+          if (!(await res.data.groups.includes("project leader"))) {
             srcDispatch({ type: "flashMessage", value: "Not authorized" })
             navigate("/")
           }

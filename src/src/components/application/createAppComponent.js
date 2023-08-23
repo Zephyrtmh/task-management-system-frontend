@@ -39,7 +39,7 @@ function CreateApp() {
     try {
       const result = await Axios.post(
         "http://localhost:8080/createApplication",
-        { acronym, description, rnumber, startDate, endDate, open, toDo, doing, done, un: srcState.username, gn: "project lead", create },
+        { acronym, description, rnumber, startDate, endDate, open, toDo, doing, done, un: srcState.username, gn: "project leader", create },
         { withCredentials: true }
       )
       //console.log(result.data.success);
@@ -72,7 +72,7 @@ function CreateApp() {
         // return navigate("/")
       }
       else {
-        srcDispatch({ type: "flashMessage", value: "Not project lead" })
+        srcDispatch({ type: "flashMessage", value: "Not project leader" })
         return navigate("/")
       }
     } catch (err) {
@@ -104,7 +104,7 @@ function CreateApp() {
   //Get groups
   async function getGroups() {
     try {
-      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: srcState.username, gn: "project lead" }, { withCredentials: true })
+      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: srcState.username, gn: "project leader" }, { withCredentials: true })
       if (groupResult.data.success) {
         console.log(groupResult.data.groups)
         setGroups(groupResult.data.groups)
@@ -128,7 +128,7 @@ function CreateApp() {
           if (res.data.status == 0) navigate("/login")
           srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
           setLoadGroup(true)
-          if (!(await res.data.groups.includes("project lead"))) {
+          if (!(await res.data.groups.includes("project leader"))) {
             srcDispatch({ type: "flashMessage", value: "Not authorized" })
             navigate("/")
           }
