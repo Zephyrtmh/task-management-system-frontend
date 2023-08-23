@@ -46,11 +46,20 @@ function PlEditTask() {
       if (permit_g.data.application.app_Acronym) {
         gn = permit_g.data.application.app_permit_Done
       }
-      console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
+      //console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
       //console.log(newState)
+
+      //Construct responseBody 
+      const requestBody = {}
+      requestBody.taskId = thisTask.taskId;
+      requestBody.un = srcState.username;
+      if(taskNotes != undefined) requestBody.userNotes = taskNotes;
+      requestBody.taskState = newState;
+      if(taskPlan != "") requestBody.taskPlan = taskPlan;
+
       const result = await Axios.post(
         "http://localhost:8080/PLEditTask",
-        { taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan },
+        requestBody,
         { withCredentials: true }
       )
 
@@ -58,10 +67,13 @@ function PlEditTask() {
 
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
-        return navigate(-1)
+        return navigate("/plan-management", {state:{acronym:acronym}})
+      }else{
+        console.log(result.data);
+        srcDispatch({ type: "flashMessage", value: "Error in updating task" })
       }
     } catch (err) {
-      // console.log(err.response.data.message)
+      console.log(err)
       if (err.response.data.message === "unable to edit task") {
         srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
       } else if (err.response.data.message === "invalid task id") {
@@ -168,13 +180,24 @@ function PlEditTask() {
         navigate(-1)
       }
 
-      const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-      if (res.data.success) {
-        if (res.data.status == 0) navigate("/login")
-        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-
-        getPlans()
-        getTask()
+      try{
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+        if(res.data.success){
+            if(res.data.status == 0) logoutFunc();
+            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+            getPlans();
+            getTask();
+        }
+        else{
+            navigate("/")
+        }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
       }
     }
     getUserInfo()
