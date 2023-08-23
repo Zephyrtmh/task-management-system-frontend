@@ -60,6 +60,10 @@ function TeamEditTask() {
         { withCredentials: true }
       )
 
+      console.log("result " , result)
+
+
+
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
         return navigate(-1)
@@ -89,26 +93,38 @@ function TeamEditTask() {
     //axios task id
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
+      console.log("task result " , taskResult)
+      console.log("task result " , taskResult.data.success)
+      console.log("state.newState ", state.newState)
+      console.log("taskResult.data.task[0].Task_state ", taskResult.data.task.taskPlan)
       if (taskResult.data.success) {
-        setThisTask(taskResult.data.task[0])
-        //console.log(taskResult.data.task[0])
+        // setThisTask(taskResult.data.task[0])
+        setThisTask(taskResult.data.task)
+        console.log("task result data task [0] ",taskResult.data.task)
 
         //Re-arranging the history notes
-        var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        // var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        var tempHistory = String(taskResult.data.task.taskNotes).split("||")
+        console.log("temp history ", tempHistory)
         tempHistory = tempHistory.reverse()
         for (const k in tempHistory) {
           setHistoryNotes(setHistoryNotes => [...setHistoryNotes, String(tempHistory[k]).split("|")])
         }
-        setTaskPlan(taskResult.data.task[0].Task_plan)
+        // setTaskPlan(taskResult.data.task[0].Task_plan)
+        setTaskPlan(taskResult.data.task.taskPlan)
 
         //Set new state
         if (state.newState === "edit") {
-          setNewState(taskResult.data.task[0].Task_state)
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
+          // setNewState(taskResult.data.task[0].Task_state)
+          setNewState(taskResult.data.task.taskState)
+        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "todo") {
           setNewState("doing")
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
+        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "doing") {
           setNewState("done")
-        } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
+        // } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "return" && taskResult.data.task.taskState === "doing") {
           setNewState("todo")
         }
         setVerbState(state.newState)
@@ -136,7 +152,10 @@ function TeamEditTask() {
   //Get plans by acronym
   async function getPlans() {
     try {
-      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
+      // const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
+      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { appAcronym: state.acronym }, { withCredentials: true })
+
+      console.log("plan result ", planResult.data.plans)
 
       if (planResult.data.success) {
         setPlans(planResult.data.plans)
@@ -207,7 +226,10 @@ function TeamEditTask() {
               </label>
               <input
                 type="text"
-                value={thisTask.Task_name}
+                // value={thisTask.Task_name}
+                // value={thisTask.Task_app_Acronym}
+                value={state.acronym}
+                
                 id="taskName"
                 class="bg-stone-400 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Task name..."
@@ -220,7 +242,8 @@ function TeamEditTask() {
                 Task description
               </label>
               <textarea
-                value={thisTask.Task_description}
+                // value={thisTask.Task_description}
+                value={thisTask.taskDescription}
                 id="desc"
                 rows="4"
                 class="block p-2.5 w-full text-sm text-white bg-stone-400 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -252,16 +275,22 @@ function TeamEditTask() {
                   id="permitOpen"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 >
+                
                   <option value=""></option>
                   {plans.map((plan, index) => {
-                    if (taskPlan === plan.Plan_MVP_name) {
+                    // if (taskPlan === plan.Plan_MVP_name) {
+                      if (taskPlan === plan.plan_MVP_name) {
                       return (
-                        <option value={plan.Plan_MVP_name} selected>
-                          {plan.Plan_MVP_name}
+                        // <option value={plan.Plan_MVP_name} selected>
+                        //   {plan.Plan_MVP_name}
+                        <option value={plan.plan_MVP_name} selected>
+                        {plan.plan_MVP_name}
                         </option>
                       )
                     } else {
-                      return <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                      // return <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                      return <option value={plan.plan_MVP_name}>{plan.plan_MVP_name}</option>
+
                     }
                   })}
                 </select>
@@ -269,7 +298,8 @@ function TeamEditTask() {
               <div>
                 <p>
                   <span className="text-md font-semibold">Application acronym: </span>
-                  {thisTask.Task_app_Acronym}
+                  {/* {thisTask.Task_app_Acronym} */}
+                  {state.acronym}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Create date: </span>
@@ -277,15 +307,18 @@ function TeamEditTask() {
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task creator </span>
-                  {thisTask.Task_creator}
+                  {/* {thisTask.Task_creator} */}
+                  {thisTask.taskCreator}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task owner: </span>
-                  {thisTask.Task_owner}
+                  {/* {thisTask.Task_owner} */}
+                  {thisTask.taskOwner}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Current task state: </span>
-                  {thisTask.Task_state}
+                  {/* {thisTask.Task_state} */}
+                  {thisTask.taskState}
                 </p>
               </div>
             </div>

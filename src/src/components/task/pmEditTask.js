@@ -44,27 +44,36 @@ function PmEditTask() {
   async function onSubmit(e) {
     e.preventDefault()
     try {
-      let permit_g
-      //Check if task has exisiting plan else no one can edit
-      if (thisTask.Task_app_Acronym == null) {
-        srcDispatch({ type: "flashMessage", value: "Unauthorized" })
-        return
-      } else {
-        permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
-      }
+      // let permit_g
+      // //Check if task has exisiting plan else no one can edit
+      // if (thisTask.Task_app_Acronym == null) {
+      //   srcDispatch({ type: "flashMessage", value: "Unauthorized" })
+      //   return
+      // } else {
+      //   permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
+      // }
 
+      //Construct the requestBody
+      const requestBody = {};
+      requestBody.taskId = thisTask.taskId;
+      requestBody.un = srcState.username;
+      if(taskNotes != undefined) requestBody.userNotes = taskNotes;
+      requestBody.taskState = newState;
+      if(taskPlan != "") requestBody.taskPlan = taskPlan;
+      console.log(requestBody);
       const result = await Axios.post(
-        "http://localhost:8080/pm-update/task",
-        { taskId: thisTask.Task_id, un: srcState.username, gn: permit_g.data.apps[0].App_permit_Open, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
+        "http://localhost:8080/PMEditTask",
+         requestBody ,
         { withCredentials: true }
       )
+      console.log(result);
 
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
-        return navigate(-1)
+        return navigate("/plan-management", {state:{acronym:acronym}})
       }
     } catch (err) {
-      console.log(err.response.data.message)
+      console.log(err)
       if (err.response.data.message === "unable to edit task") {
         srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
       } else if (err.response.data.message === "invalid task id") {
@@ -97,21 +106,21 @@ function PmEditTask() {
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
       if (taskResult.data.success) {
-        setThisTask(taskResult.data.task[0])
+        setThisTask(taskResult.data.task)
 
         //Re-arranging the history notes
-        var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        var tempHistory = String(taskResult.data.task.taskNotes).split("||")
         tempHistory = tempHistory.reverse()
 
         for (const k in tempHistory) {
           setHistoryNotes(setHistoryNotes => [...setHistoryNotes, String(tempHistory[k]).split("|")])
         }
-        setTaskPlan(taskResult.data.task[0].Task_plan)
+        setTaskPlan(taskResult.data.task.taskPlan)
 
         //Set acronym, task id, newState
         setAcronym(state.acronym)
         if (state.newState === "edit") {
-          setNewState(taskResult.data.task[0].Task_state)
+          setNewState(taskResult.data.task.taskState)
         } else if (state.newState === "release") {
           setNewState("todo")
         }
@@ -128,8 +137,8 @@ function PmEditTask() {
   //Get plans by acronym
   async function getPlans() {
     try {
-      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
-
+      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { appAcronym: state.acronym }, { withCredentials: true })
+      console.log(planResult.data)
       if (planResult.data.success) {
         setPlans(planResult.data.plans)
       }
@@ -138,6 +147,29 @@ function PmEditTask() {
       //srcDispatch({type:"flashMessage", value:"Error in getting groups"});
     }
   }
+
+  async function logoutFunc(){
+
+      const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+      if(logoutResult.status === 200){
+        //Clear localstorage
+        localStorage.clear();
+
+        //Set useState logIn to false
+        srcDispatch({type:"logout"});
+
+        localStorage.removeItem('authToken');
+
+        return navigate('/login');
+      }
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      return navigate('/login');
+    }
 
   //useEffect
   useEffect(() => {
@@ -160,14 +192,24 @@ function PmEditTask() {
         navigate(-1)
       }
 
-      // const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-      // if (res.data.success) {
-      //   if (res.data.status == 0) navigate("/login")
-      //   srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-      // } else {
-      //   srcDispatch({ type: "logout" })
-      //   navigate("/")
-      // }
+      try{
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+        if(res.data.success){
+            if(res.data.status == 0) logoutFunc();
+            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+            
+        }
+        else{
+            navigate("/")
+        }
+    }
+    catch(err){
+        if(err.response.data.message === "invalid token"){
+            srcDispatch({type:"flashMessage", value:"Please login first.."})
+            navigate("/login")
+        }
+        navigate("/login")
+    }
     }
     getUserInfo()
     getTask()
@@ -202,7 +244,7 @@ function PmEditTask() {
               </label>
               <input
                 type="text"
-                value={thisTask.Task_name}
+                value={thisTask.taskName}
                 id="taskName"
                 className="bg-stone-400 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Task name..."
@@ -215,7 +257,7 @@ function PmEditTask() {
                 Task description
               </label>
               <textarea
-                value={thisTask.Task_description}
+                value={thisTask.taskDescription}
                 id="desc"
                 rows="4"
                 className="block p-2.5 w-full text-sm text-white bg-stone-400 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -248,14 +290,14 @@ function PmEditTask() {
                 >
                   <option value=""></option>
                   {plans.map((plan, index) => {
-                    if (taskPlan === plan.Plan_MVP_name) {
+                    if (taskPlan === plan.plan_MVP_name) {
                       return (
-                        <option value={plan.Plan_MVP_name} selected>
-                          {plan.Plan_MVP_name}
+                        <option value={plan.plan_MVP_name} selected>
+                          {plan.plan_MVP_name}
                         </option>
                       )
                     } else {
-                      return <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                      return <option value={plan.plan_MVP_name}>{plan.plan_MVP_name}</option>
                     }
                   })}
                 </select>
@@ -263,7 +305,7 @@ function PmEditTask() {
               <div>
                 <p>
                   <span className="text-md font-semibold">Application acronym: </span>
-                  {thisTask.Task_app_Acronym}
+                  {thisTask.taskAppAcronym}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Create date: </span>
@@ -271,15 +313,15 @@ function PmEditTask() {
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task creator </span>
-                  {thisTask.Task_creator}
+                  {thisTask.taskCreator}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task owner: </span>
-                  {thisTask.Task_owner}
+                  {thisTask.taskOwner}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Current task state: </span>
-                  {thisTask.Task_state}
+                  {thisTask.taskState}
                 </p>
               </div>
             </div>
