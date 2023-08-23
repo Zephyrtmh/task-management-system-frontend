@@ -56,9 +56,11 @@ function TeamEditTask() {
       }
       const result = await Axios.post(
         "http://localhost:8080/team-update/task",
-        { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
+        { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym,taskPlan },
         { withCredentials: true }
       )
+
+      console.log("result " , result)
 
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
@@ -89,26 +91,38 @@ function TeamEditTask() {
     //axios task id
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
+      console.log("task result " , taskResult)
+      console.log("task result " , taskResult.data.success)
+      console.log("state.newState ", state.newState)
+      console.log("taskResult.data.task[0].Task_state ", taskResult.data.task[0])
       if (taskResult.data.success) {
-        setThisTask(taskResult.data.task[0])
-        //console.log(taskResult.data.task[0])
+        // setThisTask(taskResult.data.task[0])
+        setThisTask(taskResult.data.task)
+        console.log("task result data task [0] ",taskResult.data.task)
 
         //Re-arranging the history notes
-        var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        // var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        var tempHistory = String(taskResult.data.task.taskNotes).split("||")
+        console.log("temp history ", tempHistory)
         tempHistory = tempHistory.reverse()
         for (const k in tempHistory) {
           setHistoryNotes(setHistoryNotes => [...setHistoryNotes, String(tempHistory[k]).split("|")])
         }
-        setTaskPlan(taskResult.data.task[0].Task_plan)
+        // setTaskPlan(taskResult.data.task[0].Task_plan)
+        setTaskPlan(taskResult.data.task.taskPlan)
 
         //Set new state
         if (state.newState === "edit") {
-          setNewState(taskResult.data.task[0].Task_state)
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
+          // setNewState(taskResult.data.task[0].Task_state)
+          setNewState(taskResult.data.task.taskState)
+        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "todo") {
           setNewState("doing")
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
+        // } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "doing") {
           setNewState("done")
-        } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
+        // } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "return" && taskResult.data.task.taskState === "doing") {
           setNewState("todo")
         }
         setVerbState(state.newState)
@@ -207,7 +221,8 @@ function TeamEditTask() {
               </label>
               <input
                 type="text"
-                value={thisTask.Task_name}
+                // value={thisTask.Task_name}
+                value={thisTask.Task_app_Acronym}
                 id="taskName"
                 class="bg-stone-400 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Task name..."
