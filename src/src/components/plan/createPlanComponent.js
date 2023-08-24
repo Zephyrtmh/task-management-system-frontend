@@ -55,6 +55,9 @@ function CreatePlan() {
         document.getElementById("planColour").value = ""
         return navigate("/create/plan", { state: { acronym: acronym } })
       }
+      else{
+        srcDispatch({ type: "flashMessage", value: result.data.message })
+      }
     } catch (err) {
       //console.log(err.response.data.err.code)
       // if (err.response.data.message === "missing input") {
