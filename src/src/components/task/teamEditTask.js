@@ -63,10 +63,21 @@ function TeamEditTask() {
 
       console.log("result " , result)
 
-
-
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
+
+        console.log("new state ", newState)
+
+        console.log("result.data.success ", result.data.success)
+        if (newState === "done") {
+          const email = Axios.post(
+            "http://localhost:8080/email",
+            { taskId: state.taskId, un: srcState.username, gn },
+            { withCredentials: true }
+          )
+          console.log("email ", email)
+        }
+
         return navigate(-1)
       }
     } catch (err) {
