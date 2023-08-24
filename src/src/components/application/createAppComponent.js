@@ -105,27 +105,28 @@ function CreateApp() {
       }
     } catch (err) {
       console.log(err.response.data.message)
-      if (err.response.data.message === "invalid end date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid end date" })
-      } else if (err.response.data.message === "Input require fields") {
-        srcDispatch({ type: "flashMessage", value: "Input fields required" })
-      } else if (err.response.data.message === "invalid start date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid start date" })
-      } else if (err.response.data.message === "invalid group open") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
-      } else if (err.response.data.message === "invalid group toDo") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
-      } else if (err.response.data.message === "invalid group doing") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
-      } else if (err.response.data.message === "invalid group done") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
-      } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
-        srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
-      } else if (err.response.data.message === "not authorized") {
-        srcDispatch({ type: "flashMessage", value: "Not authorized" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Create application error" })
-      }
+      srcDispatch({ type: "flashMessage", value: "Something unusual broke the code" })
+      // if (err.response.data.message === "invalid end date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid end date" })
+      // } else if (err.response.data.message === "Input require fields") {
+      //   srcDispatch({ type: "flashMessage", value: "Input fields required" })
+      // } else if (err.response.data.message === "invalid start date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid start date" })
+      // } else if (err.response.data.message === "invalid group open") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
+      // } else if (err.response.data.message === "invalid group toDo") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
+      // } else if (err.response.data.message === "invalid group doing") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
+      // } else if (err.response.data.message === "invalid group done") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
+      // } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
+      //   srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
+      // } else if (err.response.data.message === "not authorized") {
+      //   srcDispatch({ type: "flashMessage", value: "Not authorized" })
+      // } else {
+      //   srcDispatch({ type: "flashMessage", value: "Create application error" })
+      // }
     }
   }
 

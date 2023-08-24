@@ -78,6 +78,10 @@ function CreateTask() {
         srcDispatch({ type: "flashMessage", value: "Task created" })
         return navigate("/create/task", { state: { acronym: acronym } })
       }
+      else if(result.data.message == "user inactive") {
+        logoutFunc()
+        return navigate("/login")
+      }
       else if(result.data.message == "User does not have permission") {
         srcDispatch({ type: "flashMessage", value: result.data.message })
         return navigate("/plan-management",{state: {acronym: acronym}})

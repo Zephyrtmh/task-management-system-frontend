@@ -81,7 +81,7 @@ function CreatePlan() {
       else if(result.data.message == "Plan name already exists") {
         srcDispatch({ type: "flashMessage", value: result.data.message })
       } else if(result.data.message == "not pm") {
-        srcDispatch({ type: "flashMessage", value: "not authorized" })
+        srcDispatch({ type: "flashMessage", value: "User does not have permission" })
         return navigate("/plan-management", {state: {acronym: acronym}})
       }
       else{
