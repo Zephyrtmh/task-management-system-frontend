@@ -17,6 +17,30 @@ function AppOverview() {
   //useState fields
   const [applications, setApps] = useState([])
 
+  //Logout
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
     //Get application
     async function getApplication(){
         try{
@@ -50,6 +74,7 @@ function AppOverview() {
                     
                 }
                 else{
+                    logoutFunc()
                     navigate("/")
                 }
             }

@@ -28,6 +28,29 @@ function CreatePlan() {
     return navigate("/plan-management", { state: { acronym: acronym } })
   }
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //handle submit
   async function onSubmit(e) {
     e.preventDefault()
@@ -53,12 +76,21 @@ function CreatePlan() {
         document.getElementById("startdate").value = ""
         document.getElementById("enddate").value = ""
         document.getElementById("planColour").value = ""
-        return navigate("/create/plan", { state: { acronym: acronym } })
+        // return navigate("/create/plan", { state: { acronym: acronym } })
+      }
+      else if(result.data.message == "Plan name already exists") {
+        srcDispatch({ type: "flashMessage", value: result.data.message })
+      } else if(result.data.message == "not pm") {
+        srcDispatch({ type: "flashMessage", value: "not authorized" })
+        return navigate("/plan-management", {state: {acronym: acronym}})
       }
       else{
+        logoutFunc()
         srcDispatch({ type: "flashMessage", value: result.data.message })
+        return navigate("/login")
       }
     } catch (err) {
+      srcDispatch({ type: "flashMessage", value: "Missing input" })
       //console.log(err.response.data.err.code)
       // if (err.response.data.message === "missing input") {
       //   srcDispatch({ type: "flashMessage", value: "Missing input" })

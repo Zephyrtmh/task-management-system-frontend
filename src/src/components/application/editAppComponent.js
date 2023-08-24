@@ -28,6 +28,29 @@ function EditApp() {
   const [groups, setGroups] = useState([])
   const [isLoading, setIsLoading] = useState(true);
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //HandleSubmit
   async function onSubmit(e) {
     e.preventDefault()
@@ -41,7 +64,18 @@ function EditApp() {
       console.log(result)
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "application updated" })
-        navigate("/application-management")
+        return navigate("/application-management")
+      }
+      else if(result.data.message==="end date cannot be earlier than start date") {
+        return navigate("/application-management")
+      }
+      else if(result.data.message==="user inactive") {
+        logoutFunc()
+        return navigate("/login")
+      }
+      else {
+        srcDispatch({ type: "flashMessage", value: result.data.message!=null?result.data.message:"Failed to update application" })
+        return navigate("/application-management")
       }
     } catch (err) {
       console.log(err.response.data.message)
@@ -233,6 +267,7 @@ function EditApp() {
                 onChange={e => setEndDate(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 value={String(endDate).substr(0, 10)}
+                min={String(startDate).substr(0, 10)}
                 required
               />
             </div>

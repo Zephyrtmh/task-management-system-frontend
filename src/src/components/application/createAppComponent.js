@@ -32,6 +32,29 @@ function CreateApp() {
     setRnumber(rValue)
   }
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //HandleSubmit
   async function onSubmit(e) {
     e.preventDefault()
@@ -70,6 +93,11 @@ function CreateApp() {
       else if(result.data.message === "application exists") {
         srcDispatch({ type: "flashMessage", value: "Application exists" })
         // return navigate("/")
+      }
+      else if(result.data.message === "user inactive") {
+        srcDispatch({ type: "flashMessage", value: "user inactive" })
+        logoutFunc()
+        return navigate("/login");
       }
       else {
         srcDispatch({ type: "flashMessage", value: "Not project leader" })
@@ -115,6 +143,30 @@ function CreateApp() {
     }
   }
 
+  //Logout
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //context
   const srcState = useContext(StateContext)
   const srcDispatch = useContext(DispatchContext)
@@ -125,7 +177,10 @@ function CreateApp() {
       const getUserInfo = async () => {
         const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
         if (res.data.success) {
-          if (res.data.status == 0) navigate("/login")
+          if (res.data.status == 0) {
+            logoutFunc()
+            navigate("/login")
+          }
           srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
           setLoadGroup(true)
           if (!(await res.data.groups.includes("project leader"))) {

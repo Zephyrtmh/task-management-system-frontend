@@ -29,6 +29,29 @@ function CreateTask() {
   const [taskId, setTaskId] = useState("")
   const [createDate, setCreateDate] = useState("")
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //HandleSubmit
   async function onSubmit(e) {
     e.preventDefault()
@@ -54,6 +77,10 @@ function CreateTask() {
 
         srcDispatch({ type: "flashMessage", value: "Task created" })
         return navigate("/create/task", { state: { acronym: acronym } })
+      }
+      else if(result.data.message == "User does not have permission") {
+        srcDispatch({ type: "flashMessage", value: result.data.message })
+        return navigate("/plan-management",{state: {acronym: acronym}})
       }
     } catch (err) {
       console.log(err.response.data)
