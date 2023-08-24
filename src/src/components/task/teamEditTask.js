@@ -44,10 +44,30 @@ function TeamEditTask() {
   async function onSubmit(e) {
     e.preventDefault()
     try {
-      var permit_g = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
-      console.log("permit g ", permit_g.data.application)
-      let gn
-
+        var permit_g = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
+        console.log("permit g ", permit_g.data.application)
+        let gn
+        try{
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+          if(res.data.success){
+              if(res.data.status == 0) logoutFunc();
+              srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+              if(!res.data.groups.includes(state.pName)){
+                srcDispatch({type:"flashMessage", value:"Unauthorized"})
+                return navigate(-1)
+              }
+          }
+          else{
+              navigate("/")
+          }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
+      }
       //Get group for check group
       if (verbState === "promote" && newState === "doing") {
         gn = permit_g.data.application.app_permit_toDoList

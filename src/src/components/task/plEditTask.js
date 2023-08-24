@@ -48,7 +48,27 @@ function PlEditTask() {
       }
       //console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
       //console.log(newState)
-
+      try{
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+          if(res.data.success){
+              if(res.data.status == 0) logoutFunc();
+              srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+              if(!res.data.groups.includes(state.pName)){
+                srcDispatch({type:"flashMessage", value:"Unauthorized"})
+                return navigate(-1)
+              }
+          }
+          else{
+              navigate("/")
+          }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
+      }
       //Construct responseBody 
       const requestBody = {}
       requestBody.taskId = thisTask.taskId;
