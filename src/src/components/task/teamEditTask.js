@@ -63,10 +63,21 @@ function TeamEditTask() {
 
       console.log("result " , result)
 
-
-
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
+
+        console.log("new state ", newState)
+
+        console.log("result.data.success ", result.data.success)
+        if (newState === "done") {
+          const email = Axios.post(
+            "http://localhost:8080/email",
+            { taskId: state.taskId, un: srcState.username, gn },
+            { withCredentials: true }
+          )
+          console.log("email ", email)
+        }
+
         return navigate(-1)
       }
     } catch (err) {
@@ -179,8 +190,12 @@ function TeamEditTask() {
 
       const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
       if (res.data.success) {
-        if (res.data.status == 0) navigate("/login")
-        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        if(res.data.status == 0) logoutFunc();
+            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+            if(!res.data.groups.includes(state.pName)){
+              srcDispatch({type:"flashMessage", value:"Unauthorized"})
+              return navigate(-1)
+            }
       }
     }
     getUserInfo()
