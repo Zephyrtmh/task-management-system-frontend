@@ -80,6 +80,7 @@ function CreateTask() {
       }
       else if(result.data.message == "user inactive") {
         logoutFunc()
+        srcDispatch({ type: "flashMessage", value: "user inactive" })
         return navigate("/login")
       }
       else if(result.data.message == "User does not have permission") {

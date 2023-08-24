@@ -83,6 +83,10 @@ function CreatePlan() {
       } else if(result.data.message == "not pm") {
         srcDispatch({ type: "flashMessage", value: "User does not have permission" })
         return navigate("/plan-management", {state: {acronym: acronym}})
+      } else if(result.data.message == "user inactive") {
+        logoutFunc()
+        srcDispatch({ type: "flashMessage", value: result.data.message })
+        return navigate("/login")
       }
       else{
         logoutFunc()
