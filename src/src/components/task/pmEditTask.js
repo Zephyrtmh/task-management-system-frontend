@@ -71,24 +71,15 @@ function PmEditTask() {
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
         return navigate("/plan-management", {state:{acronym:acronym}})
+      }else{
+        if(!result.data.success && result.data.message){
+          srcDispatch({ type: "flashMessage", value: result.data.message })
+        }else{
+          srcDispatch({ type: "flashMessage", value: "update task error" })
+        }
       }
     } catch (err) {
-      console.log(err)
-      if (err.response.data.message === "unable to edit task") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid task id") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "task not found") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "invalid task state") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid plan") {
-        srcDispatch({ type: "flashMessage", value: "Selected plan is invalid" })
-      } else if (err.response.data.message === "error in updating task") {
-        srcDispatch({ type: "flashMessage", value: "Server error in updating task" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task" })
-      }
+      srcDispatch({ type: "flashMessage", value: "update task error" })
     }
   }
 
