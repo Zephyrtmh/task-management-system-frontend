@@ -64,6 +64,7 @@ function TeamEditTask() {
       console.log("result " , result)
 
       if (result.data.success) {
+        console.log("this was run")
         srcDispatch({ type: "flashMessage", value: "Task updated" })
 
         //console.log("new state ", newState)
@@ -75,9 +76,8 @@ function TeamEditTask() {
             { taskId: state.taskId, un: srcState.username, gn },
             { withCredentials: true }
           )
-          console.log("email ", email)
         }
-
+        console.log("acronym here " + acronym)
         return navigate("/plan-management", {state:{acronym:acronym}})
       }else{
         if(!result.data.success && result.data.message){
@@ -139,6 +139,7 @@ function TeamEditTask() {
     e.preventDefault()
     var rValue = e.target.value.replace(/\|/g, "")
     document.getElementById("taskNotes").value = rValue
+    console.log(rValue)
     setTaskNotes(rValue)
   }
 
@@ -178,7 +179,7 @@ function TeamEditTask() {
       } else {
         navigate(-1)
       }
-
+      console.log(taskNotes)
       const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
       if (res.data.success) {
         if(res.data.status == 0) logoutFunc();

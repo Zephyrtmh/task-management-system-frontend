@@ -56,6 +56,7 @@ function CreateTask() {
   async function onSubmit(e) {
     e.preventDefault()
     //console.log(acronym, description, rnumber, startDate, endDate, open, toDo, doing, done);
+
     try {
       const result = await Axios.post(
         "http://localhost:8080/createTask",
@@ -108,6 +109,13 @@ function CreateTask() {
   //     navigate(-1)
   //   }
   // }
+
+  async function taskNotesRegex(e) {
+    e.preventDefault()
+    var rValue = e.target.value.replace(/\|/g, "")
+    document.getElementById("taskNotes").value = rValue
+    setTaskNotes(rValue)
+  }
 
   //Get plans by acronym
   async function getPlans() {
@@ -215,6 +223,7 @@ function CreateTask() {
               Task notes
             </label>
             <textarea
+              onInput={taskNotesRegex}
               onChange={e => setTaskNotes(e.target.value)}
               id="taskNotes"
               rows="4"
