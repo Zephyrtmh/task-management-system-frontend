@@ -103,16 +103,16 @@ const TaskModal = (props) => {
                                     <tbody class="h-96 overflow-y-auto">
                                         {historyNotes.map((note, index)=>(
                                             <tr key={index} className="p-2">
-                                                <td className="bg-stone-100">{note[0]}</td>
-                                                <td>{note[1]}</td>
-                                                <td className="bg-stone-100">{new Date(note[2]).toLocaleString('en-GB', {
+                                                <td className="bg-stone-100 align-top">{note[0]}</td>
+                                                <td className="align-top">{note[1]}</td>
+                                                <td className="bg-stone-100 align-top">{new Date(note[2]).toLocaleString('en-GB', {
                                                     day: "numeric",
                                                     month: "short",
                                                     year: "numeric",
                                                     hour: "numeric",
                                                     minute: "2-digit"
                                                 })}</td>
-                                                <td>{note[3] ? note[3] : "NULL"}</td>
+                                                <td className="align-top">{note[3] ? note[3] : "NULL"}</td>
                                             </tr>
                                         ))}
 
