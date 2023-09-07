@@ -8,7 +8,7 @@ module.exports = {
     filename: "bundled.js"
   },
   mode: "development",
-  devtool: "source-map",
+  devtool: "eval-source-map",
   devServer: {
     port: 3030,
     static: {
@@ -38,3 +38,4 @@ module.exports = {
     ]
   }
 }
+// test

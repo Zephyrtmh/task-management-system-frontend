@@ -29,14 +29,38 @@ function CreateTask() {
   const [taskId, setTaskId] = useState("")
   const [createDate, setCreateDate] = useState("")
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //HandleSubmit
   async function onSubmit(e) {
     e.preventDefault()
     //console.log(acronym, description, rnumber, startDate, endDate, open, toDo, doing, done);
+
     try {
       const result = await Axios.post(
-        "http://localhost:8080/create-task",
-        { taskName, taskDescription, taskNotes, taskPlan, taskApp: acronym, taskCreator: srcState.username, taskOwner: srcState.username, un: srcState.username, gn },
+        "http://localhost:8080/createTask",
+        { taskName, taskDescription, taskNotes, taskPlan, taskAppAcronym: acronym, taskCreator: srcState.username, taskOwner: srcState.username, un: srcState.username, gn },
         { withCredentials: true }
       )
 
@@ -55,6 +79,15 @@ function CreateTask() {
         srcDispatch({ type: "flashMessage", value: "Task created" })
         return navigate("/create/task", { state: { acronym: acronym } })
       }
+      else if(result.data.message == "user inactive") {
+        logoutFunc()
+        srcDispatch({ type: "flashMessage", value: "user inactive" })
+        return navigate("/login")
+      }
+      else if(result.data.message == "User does not have permission") {
+        srcDispatch({ type: "flashMessage", value: result.data.message })
+        return navigate("/plan-management",{state: {acronym: acronym}})
+      }
     } catch (err) {
       console.log(err.response.data)
 
@@ -63,18 +96,25 @@ function CreateTask() {
   }
 
   //check if app exist
-  async function checkApp() {
-    if (!state.acronym) {
-      navigate(-1)
-    }
+  // async function checkApp() {
+  //   if (!state.acronym) {
+  //     navigate(-1)
+  //   }
 
-    //get app
-    const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
-    //console.log(appResult);
-    if (!appResult.data.success) {
-      srcDispatch({ type: "flashMessage", value: "Invalid app acronym" })
-      navigate(-1)
-    }
+  //   //get app
+  //   const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
+  //   //console.log(appResult);
+  //   if (!appResult.data.success) {
+  //     srcDispatch({ type: "flashMessage", value: "Invalid app acronym" })
+  //     navigate(-1)
+  //   }
+  // }
+
+  async function taskNotesRegex(e) {
+    e.preventDefault()
+    var rValue = e.target.value.replace(/\|/g, "")
+    document.getElementById("taskNotes").value = rValue
+    setTaskNotes(rValue)
   }
 
   //Get plans by acronym
@@ -82,13 +122,14 @@ function CreateTask() {
     try {
       if (state.acronym) setAcronym(state.acronym)
 
-      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
-      const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym })
+      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { appAcronym: state.acronym }, { withCredentials: true })
+      const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, {withCredentials: true})
       if (planResult.data.success) {
+        console.log("planResult", planResult.data.plans)
         setPlans(planResult.data.plans)
       }
       if (appResult.data.success) {
-        setGn(appResult.data.apps[0].App_permit_Create)
+        setGn(appResult.data.application.app_permit_Create)
       }
     } catch (e) {
       console.log(e)
@@ -120,13 +161,17 @@ function CreateTask() {
       if (res.data.success) {
         if (res.data.status == 0) navigate("/login")
         srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        console.log("attempts to run this")
         const checkOpenPermit = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
+        console.log(checkOpenPermit.data.application);
         if (checkOpenPermit.length < 0) {
           navigate("/")
         }
-        if (!res.data.groups.includes(checkOpenPermit.data.apps[0].App_permit_Create)) {
+        if (!res.data.groups.includes(checkOpenPermit.data.application.app_permit_Create)) {
           navigate("/")
         }
+        getPlans()
+        // checkApp()
       } else {
         navigate("/")
       }
@@ -134,13 +179,13 @@ function CreateTask() {
     getUserInfo()
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      getPlans()
-      checkApp()
-    }
-  }, [srcState.username])
-
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     getPlans()
+  //     checkApp()
+  //   }
+  // }, [srcState.username])
+  
   return (
     <>
       <div className="container mx-auto mt-5">
@@ -178,6 +223,7 @@ function CreateTask() {
               Task notes
             </label>
             <textarea
+              onInput={taskNotesRegex}
               onChange={e => setTaskNotes(e.target.value)}
               id="taskNotes"
               rows="4"
@@ -197,9 +243,12 @@ function CreateTask() {
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
-                {plans.map((plan, index) => (
-                  <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
-                ))}
+                {plans.map((plan, index) => {
+                  // <option value={index}>{index}</option>
+                  if(plan !== null) {
+                    return <option value={plan.plan_MVP_name}>{plan.plan_MVP_name}</option>
+                  }
+                })}
               </select>
             </div>
             <div>

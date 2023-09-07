@@ -40,6 +40,13 @@ function PlanOverview() {
   const [aDoing, setADoing] = useState(false)
   const [aDone, setADone] = useState(false)
 
+  //Permit group names to be passed into useState edit task
+  const [pCreateName, setPCreateName] = useState()
+  const [pOpenName, setPOpenName] = useState()
+  const [pTodoName, setPTodoName] = useState()
+  const [pDoingName, setPDoingName] = useState()
+  const [pDoneName, setPDoneName] = useState()
+
   //Onload
   const [onLoad, setOnLoad] = useState(true)
 
@@ -56,13 +63,15 @@ function PlanOverview() {
   async function setAuthorization() {
     //Get application
     const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
-    console.log(appResult);
+    //console.log(appResult);
 
     if (appResult.data.success) {
       // Check if current user got permission for create
       if (appResult.data.application.app_permit_Create != null) {
         //Checkgroup
         let createR = await Axios.post("http://localhost:8080/cg", { un: srcState.username, gn: appResult.data.application.app_permit_Create }, {withCredentials: true})
+        //Set permit group name
+        setPCreateName(appResult.data.application.app_permit_Create)
         if (createR.data.cgResult) {
           setACreate(true)
         }
@@ -72,6 +81,8 @@ function PlanOverview() {
       if (appResult.data.application.app_permit_Open != null) {
         //Checkgroup
         let OpenR = await Axios.post("http://localhost:8080/cg", { un: srcState.username, gn: appResult.data.application.app_permit_Open }, {withCredentials: true})
+        //Set permit group name
+        setPOpenName(appResult.data.application.app_permit_Open)
         if (OpenR.data.cgResult) {
           setAOpen(true)
         }
@@ -81,6 +92,8 @@ function PlanOverview() {
       if (appResult.data.application.app_permit_toDoList != null) {
         //Checkgroup
         let todoR = await Axios.post("http://localhost:8080/cg", { un: srcState.username, gn: appResult.data.application.app_permit_toDoList }, {withCredentials: true})
+        //Set permit group name
+        setPTodoName(appResult.data.application.app_permit_toDoList)
         if (todoR.data.cgResult) {
           setATodo(true)
         }
@@ -90,6 +103,8 @@ function PlanOverview() {
       if (appResult.data.application.app_permit_Doing != null) {
         //Checkgroup
         let doingR = await Axios.post("http://localhost:8080/cg", { un: srcState.username, gn: appResult.data.application.app_permit_Doing }, {withCredentials: true})
+        //Set permit group name
+        setPDoingName(appResult.data.application.app_permit_Doing)
         if (doingR.data.cgResult) {
           setADoing(true)
         }
@@ -99,6 +114,8 @@ function PlanOverview() {
       if (appResult.data.application.app_permit_Done != null) {
         //Checkgroup
         let doneR = await Axios.post("http://localhost:8080/cg", { un: srcState.username, gn: appResult.data.application.app_permit_Done }, {withCredentials: true})
+        //Set permit group name
+        setPDoneName(appResult.data.application.app_permit_Done)
         if (doneR.data.cgResult) {
           setADone(true)
         }
@@ -134,9 +151,8 @@ function PlanOverview() {
 
     //Axios get task by app acronym
     const taskResult = await Axios.post("http://localhost:8080/all-task/app", { appAcronym: state.acronym }, { withCredentials: true })
-    console.log("taskResults", Object.values(taskResult.data.tasks))
     
-    if (taskResult.data.success) {
+    if (taskResult.data.success && taskResult.data.tasks != null) {
       //Set onload to false
       setOnLoad(false)
       //console.log(taskResult.data.tasks);
@@ -237,33 +253,34 @@ function PlanOverview() {
 
   //useEffect
   useEffect(() => {
-    // const getUserInfo = async () => {
-    //   if (state == null) {
-    //     return navigate("/")
-    //   }
-    //   if (state.acronym == null) {
-    //     return navigate("/")
-    //   }
+    const getUserInfo = async () => {
+      if (state == null) {
+        return navigate("/")
+      }
+      if (state.acronym == null) {
+        return navigate("/")
+      }
 
-    //   const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //   if (res.data.success) {
-    //     if (res.data.status == 0) navigate("/login")
-    //     srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //     setAcronym(state.acronym)
-    //     //console.log(state.acronym)
-    //   } else {
-    //     navigate("/")
-    //   }
-    // }
-    // getUserInfo()
+      const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+      if (res.data.success) {
+        if (res.data.status == 0) navigate("/login")
+        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        setAcronym(state.acronym)
+        //console.log(state.acronym)
+        getApp();
+      } else {
+        navigate("/")
+      }
+    }
+    getUserInfo()
   }, [])
 
-  useEffect(() => {
-    console.log("acronym: ", acronym)
-    if (acronym != undefined) {
-      getApp()
-    }
-  }, [acronym])
+  // useEffect(() => {
+  //   console.log("acronym: ", acronym)
+  //   if (acronym != undefined) {
+  //     getApp()
+  //   }
+  // }, [acronym])
 
   useEffect(() => {
     if (srcState.username != "nil") {
@@ -386,7 +403,7 @@ function PlanOverview() {
                           type="button"
                           className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1 px-4 rounded-full h-7 text-center"
                           to={"/pm-update/task"}
-                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit" }}
+                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit", pName: pOpenName }}
                         >
                           Edit
                         </Link>
@@ -395,7 +412,7 @@ function PlanOverview() {
                       )}
 
                       {aOpen && (
-                        <Link type="button" to={"/pm-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "release" }}>
+                        <Link type="button" to={"/pm-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "release", pName: pOpenName }}>
                           <div class="w-5  overflow-hidden inline-block">
                             <div title="RELEASE" class=" h-10 hover:bg-slate-500 bg-black rotate-45 transform origin-top-left"></div>
                           </div>
@@ -453,7 +470,7 @@ function PlanOverview() {
                           type="button"
                           className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1 px-4 rounded-full h-7 text-center"
                           to={"/team-update/task"}
-                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit" }}
+                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit", pName: pTodoName }}
                         >
                           Edit
                         </Link>
@@ -462,7 +479,7 @@ function PlanOverview() {
                       )}
 
                       {aTodo && (
-                        <Link type="button" to={"/team-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "promote" }}>
+                        <Link type="button" to={"/team-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "promote", pName: pTodoName }}>
                           <div class="w-5  overflow-hidden inline-block">
                             <div title="PROMOTE" class=" h-10 hover:bg-slate-500 bg-black rotate-45 transform origin-top-left"></div>
                           </div>
@@ -514,7 +531,7 @@ function PlanOverview() {
                   <div class="px-3 pt-1 pb-1">
                     <div className="flex justify-between">
                       {aDoing ? (
-                        <Link type="button" to={"/team-update/task"} className="" state={{ taskId: task.taskId, acronym: state.acronym, newState: "return" }}>
+                        <Link type="button" to={"/team-update/task"} className="" state={{ taskId: task.taskId, acronym: state.acronym, newState: "return", pName: pDoingName }}>
                           <div class="w-5 overflow-hidden inline-block">
                             <div class=" h-10 hover:bg-slate-500 bg-black -rotate-45 transform origin-top-right" title="RETURN"></div>
                           </div>
@@ -528,7 +545,7 @@ function PlanOverview() {
                           type="button"
                           className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1 px-4 rounded-full h-7 text-center"
                           to={"/team-update/task"}
-                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit" }}
+                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit", pName: pDoingName }}
                         >
                           Edit
                         </Link>
@@ -537,7 +554,7 @@ function PlanOverview() {
                       )}
 
                       {aDoing && (
-                        <Link type="button" to={"/team-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "promote" }}>
+                        <Link type="button" to={"/team-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "promote", pName: pDoingName }}>
                           <div class="w-5  overflow-hidden inline-block">
                             <div title="PROMOTE" class=" h-10 hover:bg-slate-500 bg-black rotate-45 transform origin-top-left"></div>
                           </div>
@@ -589,7 +606,7 @@ function PlanOverview() {
                   <div class="px-3 pt-1 pb-1">
                     <div className="flex justify-between">
                       {aDone ? (
-                        <Link type="button" to={"/pl-update/task"} className="" state={{ taskId: task.taskId, acronym: state.acronym, newState: "reject" }}>
+                        <Link type="button" to={"/pl-update/task"} className="" state={{ taskId: task.taskId, acronym: state.acronym, newState: "reject", pName: pDoneName }}>
                           <div class="w-5 overflow-hidden inline-block">
                             <div class=" h-10 hover:bg-slate-500 bg-black -rotate-45 transform origin-top-right" title="REJECT"></div>
                           </div>
@@ -603,7 +620,7 @@ function PlanOverview() {
                           type="button"
                           className="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-1 px-4 rounded-full h-7 text-center"
                           to={"/pl-update/task"}
-                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit" }}
+                          state={{ taskId: task.taskId, acronym: state.acronym, newState: "edit", pName: pDoneName }}
                         >
                           Edit
                         </Link>
@@ -612,7 +629,7 @@ function PlanOverview() {
                       )}
 
                       {aDone && (
-                        <Link type="button" to={"/pl-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "accept" }}>
+                        <Link type="button" to={"/pl-update/task"} state={{ taskId: task.taskId, acronym: state.acronym, newState: "accept", pName: pDoneName }}>
                           <div class="w-5  overflow-hidden inline-block">
                             <div title="ACCEPT" class=" h-10 hover:bg-slate-500 bg-black rotate-45 transform origin-top-left"></div>
                           </div>

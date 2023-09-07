@@ -5,6 +5,7 @@ import Axios from "axios"
 //context
 import StateContext from "../../StateContext"
 import DispatchContext from "../../DispatchContext"
+import IsLoadingComponent from "../global/isLoadingComponent"
 
 function EditApp() {
   //navigate
@@ -14,17 +15,41 @@ function EditApp() {
   const { state } = useLocation()
 
   //useState fields
-  const [acronym, setAcronym] = useState()
-  const [description, setDescription] = useState()
-  const [rnumber, setRnumber] = useState()
-  const [startDate, setStartDate] = useState()
-  const [endDate, setEndDate] = useState()
-  const [create, setCreate] = useState()
-  const [open, setOpen] = useState()
-  const [toDo, setTodo] = useState()
-  const [doing, setDoing] = useState()
-  const [done, setDone] = useState()
+  const [acronym, setAcronym] = useState("")
+  const [description, setDescription] = useState("")
+  const [rnumber, setRnumber] = useState(0)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [create, setCreate] = useState("")
+  const [open, setOpen] = useState("")
+  const [toDo, setTodo] = useState("")
+  const [doing, setDoing] = useState("")
+  const [done, setDone] = useState("")
   const [groups, setGroups] = useState([])
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
 
   //HandleSubmit
   async function onSubmit(e) {
@@ -32,36 +57,47 @@ function EditApp() {
     console.log(acronym, description, rnumber, startDate, endDate, create, open, toDo, doing, done)
     try {
       const result = await Axios.post(
-        "http://localhost:8080/update/application",
+        "http://localhost:8080/updateApplication",
         { acronym, description, endDate, permitCreate: create, permitOpen: open, permitTodo: toDo, permitDoing: doing, permitDone: done, un: srcState.username, gn: "project leader" },
         { withCredentials: true }
       )
       console.log(result)
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "application updated" })
-        navigate("/application-management")
+        return navigate("/application-management")
+      }
+      else if(result.data.message==="end date cannot be earlier than start date") {
+        return navigate("/application-management")
+      }
+      else if(result.data.message==="user inactive") {
+        logoutFunc()
+        return navigate("/login")
+      }
+      else {
+        srcDispatch({ type: "flashMessage", value: result.data.message!=null?result.data.message:"Failed to update application" })
+        return navigate("/application-management")
       }
     } catch (err) {
       console.log(err.response.data.message)
-      if (err.response.data.message === "End date invalid") {
-        srcDispatch({ type: "flashMessage", value: "Invalid end date" })
-      } else if (err.response.data.message === "Input require fields") {
-        srcDispatch({ type: "flashMessage", value: "Input fields required" })
-      } else if (err.response.data.message === "invalid start date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid start date" })
-      } else if (err.response.data.message === "invalid group open") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
-      } else if (err.response.data.message === "invalid group toDo") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
-      } else if (err.response.data.message === "invalid group doing") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
-      } else if (err.response.data.message === "invalid group done") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
-      } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
-        srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Update application error" })
-      }
+      // if (err.response.data.message === "End date invalid") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid end date" })
+      // } else if (err.response.data.message === "Input require fields") {
+      //   srcDispatch({ type: "flashMessage", value: "Input fields required" })
+      // } else if (err.response.data.message === "invalid start date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid start date" })
+      // } else if (err.response.data.message === "invalid group open") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
+      // } else if (err.response.data.message === "invalid group toDo") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
+      // } else if (err.response.data.message === "invalid group doing") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
+      // } else if (err.response.data.message === "invalid group done") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
+      // } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
+      //   srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
+      // } else {
+      //   srcDispatch({ type: "flashMessage", value: "Update application error" })
+      // }
     }
   }
 
@@ -70,43 +106,46 @@ function EditApp() {
     console.log(state.acronym);
     //Axios app
     const appResult = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
-
+    
     //Set app
     if (appResult.data.success) {
-      setAcronym(appResult.data.apps[0].App_Acronym)
-      setDescription(appResult.data.apps[0].App_Description)
-      setRnumber(appResult.data.apps[0].App_Rnumber)
-      setStartDate(appResult.data.apps[0].App_startDate)
-      setEndDate(appResult.data.apps[0].App_endDate)
-      setCreate(appResult.data.apps[0].App_permit_Create)
-      setOpen(appResult.data.apps[0].App_permit_Open)
-      setTodo(appResult.data.apps[0].App_permit_toDoList)
-      setDoing(appResult.data.apps[0].App_permit_Doing)
-      setDone(appResult.data.apps[0].App_permit_Done)
+      setAcronym(appResult.data.application.app_Acronym)
+      setDescription(appResult.data.application.app_Description)
+      setRnumber(appResult.data.application.app_Rnumber)
+      setStartDate(appResult.data.application.app_startDate)
+      setEndDate(appResult.data.application.app_endDate)
+      // setCreate(appResult.data.application.app_permit_Create)
+      // setOpen(appResult.data.application.app_permit_Open)
+      // setTodo(appResult.data.application.app_permit_toDo)
+      // setDoing(appResult.data.application.app_permit_Doing)
+      // setDone(appResult.data.application.app_permit_Done)
 
-      console.log(appResult.data.apps[0].App_permit_Doing)
       //Set list
-      if (appResult.data.apps[0].App_permit_Create) document.getElementById("permitCreate").value = appResult.data.apps[0].App_permit_Create
-      if (appResult.data.apps[0].App_permit_Open) document.getElementById("permitOpen").value = appResult.data.apps[0].App_permit_Open
-      if (appResult.data.apps[0].App_permit_toDoList) document.getElementById("permitTodo").value = appResult.data.apps[0].App_permit_toDoList
-      if (appResult.data.apps[0].App_permit_Doing) document.getElementById("permitDoing").value = appResult.data.apps[0].App_permit_Doing
-      if (appResult.data.apps[0].App_permit_Done) document.getElementById("permitDone").value = appResult.data.apps[0].App_permit_Done
+      // if (appResult.data.application.app_permit_Create) document.getElementById("permitCreate").value = appResult.data.application.app_permit_Create
+      // if (appResult.data.application.app_permit_Open) document.getElementById("permitOpen").value = appResult.data.application.app_permit_Open
+      // if (appResult.data.application.app_permit_toDoList) document.getElementById("permitTodo").value = appResult.data.application.app_permit_toDoList
+      // if (appResult.data.application.app_permit_Doing) document.getElementById("permitDoing").value = appResult.data.application.app_permit_Doing
+      // if (appResult.data.application.app_permit_Done) document.getElementById("permitDone").value = appResult.data.application.app_permit_Done
+      if (appResult.data.application.app_permit_Create) setCreate(appResult.data.application.app_permit_Create)
+      if (appResult.data.application.app_permit_Open) setOpen(appResult.data.application.app_permit_Open)
+      if (appResult.data.application.app_permit_toDoList) setTodo(appResult.data.application.app_permit_toDoList)
+      if (appResult.data.application.app_permit_Doing) setDoing(appResult.data.application.app_permit_Doing)
+      if (appResult.data.application.app_permit_Done) setDone(appResult.data.application.app_permit_Done)
     }
+    setIsLoading(false);
   }
 
   //Get groups
-  async function getGroups() {
+  async function getGroups(username) {
     try {
-      //Get all groups
-      const groupResult = await Axios.post("http://localhost:8080/allgroups", { un: srcState.username, gn: "project leader" }, { withCredentials: true })
-
-      //Set groups
+      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: username, gn: "project leader" }, { withCredentials: true })
       if (groupResult.data.success) {
+        console.log(groupResult.data.groups)
         setGroups(groupResult.data.groups)
       }
     } catch (e) {
       console.log(e)
-      navigate("/application-management")
+      //srcDispatch({type:"flashMessage", value:"Error in getting groups"});
     }
   }
 
@@ -123,29 +162,47 @@ function EditApp() {
 
   //useEffect
   useEffect(() => {
-    // const getUserInfo = async () => {
-    //   const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //   if (res.data.success) {
-    //     srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //   }
-    // }
-    // getUserInfo()
+    try {
+      const getUserInfo = async () => {
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+        if (res.data.success) {
+          if (res.data.status == 0) navigate("/login")
+          srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+          if (!(await res.data.groups.includes("project leader"))) {
+            srcDispatch({ type: "flashMessage", value: "Not authorized" })
+            navigate("/")
+          }
+
+          getGroups(res.data.username)
+          getApp()
+          
+        } else {
+          navigate("/")
+        }
+      }
+      getUserInfo()
+    } catch (err) {
+      console.log(err)
+    }
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      getGroups()
-    }
-  }, [srcState.username])
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     getGroups()
+  //   }
+  // }, [srcState.username])
 
-  useEffect(() => {
-    getApp()
-  }, [groups])
+  // useEffect(() => {
+  //   getApp()
+  // }, [groups])
 
   useEffect(()=>{
     if(srcState.testLoginComplete) authorization();
   },[srcState.testLoginComplete])
 
+  if(isLoading) {
+    return <IsLoadingComponent />
+  }
   return (
     <>
       <div className="container mx-auto mt-5">
@@ -210,6 +267,7 @@ function EditApp() {
                 onChange={e => setEndDate(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 value={String(endDate).substr(0, 10)}
+                min={String(startDate).substr(0, 10)}
                 required
               />
             </div>
@@ -218,16 +276,17 @@ function EditApp() {
                 Permit create (group)
               </label>
               <select
+                value={create}
                 onChange={e => setCreate(e.target.value)}
                 id="permitCreate"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -239,16 +298,17 @@ function EditApp() {
                 Permit open (group)
               </label>
               <select
+                value={open}
                 onChange={e => setOpen(e.target.value)}
                 id="permitOpen"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -260,16 +320,17 @@ function EditApp() {
                 Permit todo (group)
               </label>
               <select
+                value={toDo}
                 id="permitTodo"
                 onChange={e => setTodo(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -281,16 +342,17 @@ function EditApp() {
                 Permit doing (group)
               </label>
               <select
+                value={doing}
                 id="permitDoing"
                 onChange={e => setDoing(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -302,16 +364,17 @@ function EditApp() {
                 Permit done (group)
               </label>
               <select
+                value={done}
                 id="permitDone"
                 onChange={e => setDone(e.target.value)}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }

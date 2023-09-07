@@ -46,11 +46,40 @@ function PlEditTask() {
       if (permit_g.data.application.app_Acronym) {
         gn = permit_g.data.application.app_permit_Done
       }
-      console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
+      //console.log({ taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan });
       //console.log(newState)
+      try{
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+          if(res.data.success){
+              if(res.data.status == 0) logoutFunc();
+              srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+              if(!res.data.groups.includes(state.pName)){
+                srcDispatch({type:"flashMessage", value:"Unauthorized"})
+                return navigate(-1)
+              }
+          }
+          else{
+              navigate("/")
+          }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
+      }
+      //Construct responseBody 
+      const requestBody = {}
+      requestBody.taskId = thisTask.taskId;
+      requestBody.un = srcState.username;
+      if(taskNotes != undefined) requestBody.userNotes = taskNotes;
+      requestBody.taskState = newState;
+      if(taskPlan != "") requestBody.taskPlan = taskPlan;
+
       const result = await Axios.post(
-        "http://localhost:8080/pl-update/task",
-        { taskId: thisTask.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.taskAppAcronym, plan: taskPlan },
+        "http://localhost:8080/PLEditTask",
+        requestBody,
         { withCredentials: true }
       )
 
@@ -58,25 +87,17 @@ function PlEditTask() {
 
       if (result.data.success) {
         srcDispatch({ type: "flashMessage", value: "Task updated" })
-        return navigate(-1)
+        return navigate("/plan-management", {state:{acronym:acronym}})
+      }else{
+        //console.log(result.data);
+        if(!result.data.success && result.data.message){
+          srcDispatch({ type: "flashMessage", value: result.data.message })
+        }else{
+          srcDispatch({ type: "flashMessage", value: "update task error" })
+        }
       }
     } catch (err) {
-      // console.log(err.response.data.message)
-      if (err.response.data.message === "unable to edit task") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid task id") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "task not found") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "invalid task state") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid plan") {
-        srcDispatch({ type: "flashMessage", value: "Selected plan is invalid" })
-      } else if (err.response.data.message === "error in updating task") {
-        srcDispatch({ type: "flashMessage", value: "Server error in updating task" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task" })
-      }
+      srcDispatch({ type: "flashMessage", value: "update task error" })
     }
   }
 
@@ -168,21 +189,39 @@ function PlEditTask() {
         navigate(-1)
       }
 
-      const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-      if (res.data.success) {
-        if (res.data.status == 0) navigate("/login")
-        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+      try{
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+        if(res.data.success){
+            if(res.data.status == 0) logoutFunc();
+            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+            if(!res.data.groups.includes(state.pName)){
+              srcDispatch({type:"flashMessage", value:"Unauthorized"})
+              return navigate(-1)
+            }
+            getPlans();
+            getTask();
+        }
+        else{
+            navigate("/")
+        }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
       }
     }
     getUserInfo()
   }, [])
 
-  useEffect(() => {
-    if (srcState.username != "nil") {
-      getPlans()
-      getTask()
-    }
-  }, [srcState.username])
+  // useEffect(() => {
+  //   if (srcState.username != "nil") {
+  //     getPlans()
+  //     getTask()
+  //   }
+  // }, [srcState.username])
 
   if (onLoad) {
     return (
@@ -247,7 +286,7 @@ function PlEditTask() {
                   Plan
                 </label>
 
-                {verbState === "accept" ? (
+                {verbState === "accept" || verbState === "edit"? (
                   <select
                     onChange={e => setTaskPlan(e.target.value)}
                     id="permitOpen"
@@ -339,7 +378,6 @@ function PlEditTask() {
                             </tr>
                           </thead>
                           <tbody className="h-96 overflow-y-auto">
-                            //TODO: fix bug with notes
                             {historyNotes.map((note, index) => (
                               <tr key={index} className="p-2">
                                 <td className="bg-stone-100">{note[0]}</td>

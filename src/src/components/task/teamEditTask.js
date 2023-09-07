@@ -44,43 +44,70 @@ function TeamEditTask() {
   async function onSubmit(e) {
     e.preventDefault()
     try {
-      var permit_g = await Axios.post("http://localhost:8080/getApplication", { acronym: thisTask.Task_app_Acronym }, { withCredentials: true })
-      let gn
-
+        var permit_g = await Axios.post("http://localhost:8080/getApplication", { appAcronym: state.acronym }, { withCredentials: true })
+        console.log("permit g ", permit_g.data.application)
+        let gn
+        try{
+          const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {},{withCredentials:true});
+          if(res.data.success){
+              if(res.data.status == 0) logoutFunc();
+              srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+              if(!res.data.groups.includes(state.pName)){
+                srcDispatch({type:"flashMessage", value:"Unauthorized"})
+                return navigate(-1)
+              }
+          }
+          else{
+              navigate("/")
+          }
+      }
+      catch(err){
+          if(err.response.data.message === "invalid token"){
+              srcDispatch({type:"flashMessage", value:"Please login first.."})
+              navigate("/login")
+          }
+          navigate("/login")
+      }
       //Get group for check group
       if (verbState === "promote" && newState === "doing") {
-        gn = permit_g.data.apps[0].App_permit_toDoList
+        gn = permit_g.data.application.app_permit_toDoList
       } else {
-        console.log("done state", permit_g.data.apps[0].App_permit_Doing)
-        gn = permit_g.data.apps[0].App_permit_Doing
+        console.log("done state", permit_g.data.application.app_permit_Doing)
+        gn = permit_g.data.application.app_permit_Doing
       }
       const result = await Axios.post(
         "http://localhost:8080/team-update/task",
-        { taskId: thisTask.Task_id, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: thisTask.Task_app_Acronym, taskPlan },
+        { taskId: state.taskId, un: srcState.username, gn, userNotes: taskNotes, taskState: newState, acronym: state.acronym, taskPlan },
         { withCredentials: true }
       )
 
+      console.log("result " , result)
+
       if (result.data.success) {
+        console.log("this was run")
         srcDispatch({ type: "flashMessage", value: "Task updated" })
-        return navigate(-1)
+
+        //console.log("new state ", newState)
+
+        //console.log("result.data.success ", result.data.success)
+        if (newState === "done") {
+          const email = Axios.post(
+            "http://localhost:8080/email",
+            { taskId: state.taskId, un: srcState.username, gn },
+            { withCredentials: true }
+          )
+        }
+        console.log("acronym here " + acronym)
+        return navigate("/plan-management", {state:{acronym:acronym}})
+      }else{
+        if(!result.data.success && result.data.message){
+          srcDispatch({ type: "flashMessage", value: result.data.message })
+        }else{
+          srcDispatch({ type: "flashMessage", value: "update task error" })
+        }
       }
     } catch (err) {
-      console.log(err)
-      if (err.response.data.message === "unable to edit task") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid task id") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "task not found") {
-        srcDispatch({ type: "flashMessage", value: "Task id invalid" })
-      } else if (err.response.data.message === "invalid task state") {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task, please check the task state." })
-      } else if (err.response.data.message === "invalid plan") {
-        srcDispatch({ type: "flashMessage", value: "Selected plan is invalid" })
-      } else if (err.response.data.message === "error in updating task") {
-        srcDispatch({ type: "flashMessage", value: "Server error in updating task" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Unable to update task" })
-      }
+      srcDispatch({ type: "flashMessage", value: "update task error" })
     }
   }
 
@@ -89,26 +116,28 @@ function TeamEditTask() {
     //axios task id
     try {
       const taskResult = await Axios.post("http://localhost:8080/all-task/taskId", { taskId: state.taskId }, { withCredentials: true })
+
       if (taskResult.data.success) {
-        setThisTask(taskResult.data.task[0])
-        //console.log(taskResult.data.task[0])
+        setThisTask(taskResult.data.task)
+        console.log("task result data task [0] ",taskResult.data.task)
 
         //Re-arranging the history notes
-        var tempHistory = String(taskResult.data.task[0].Task_notes).split("||")
+        var tempHistory = String(taskResult.data.task.taskNotes).split("||")
+        console.log("temp history ", tempHistory)
         tempHistory = tempHistory.reverse()
         for (const k in tempHistory) {
           setHistoryNotes(setHistoryNotes => [...setHistoryNotes, String(tempHistory[k]).split("|")])
         }
-        setTaskPlan(taskResult.data.task[0].Task_plan)
+        setTaskPlan(taskResult.data.task.taskPlan)
 
         //Set new state
         if (state.newState === "edit") {
-          setNewState(taskResult.data.task[0].Task_state)
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "todo") {
+          setNewState(taskResult.data.task.taskState)
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "todo") {
           setNewState("doing")
-        } else if (state.newState === "promote" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "promote" && taskResult.data.task.taskState === "doing") {
           setNewState("done")
-        } else if (state.newState === "return" && taskResult.data.task[0].Task_state === "doing") {
+        } else if (state.newState === "return" && taskResult.data.task.taskState === "doing") {
           setNewState("todo")
         }
         setVerbState(state.newState)
@@ -130,13 +159,16 @@ function TeamEditTask() {
     e.preventDefault()
     var rValue = e.target.value.replace(/\|/g, "")
     document.getElementById("taskNotes").value = rValue
+    console.log(rValue)
     setTaskNotes(rValue)
   }
 
   //Get plans by acronym
   async function getPlans() {
     try {
-      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { app_Acronym: state.acronym }, { withCredentials: true })
+      const planResult = await Axios.post("http://localhost:8080/all-plan/app", { appAcronym: state.acronym }, { withCredentials: true })
+
+      console.log("plan result ", planResult.data.plans)
 
       if (planResult.data.success) {
         setPlans(planResult.data.plans)
@@ -167,11 +199,15 @@ function TeamEditTask() {
       } else {
         navigate(-1)
       }
-
+      console.log(taskNotes)
       const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
       if (res.data.success) {
-        if (res.data.status == 0) navigate("/login")
-        srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+        if(res.data.status == 0) logoutFunc();
+            srcDispatch({type:"login", value:res.data, admin:res.data.groups.includes("admin"), isPL:res.data.groups.includes("project leader")});
+            if(!res.data.groups.includes(state.pName)){
+              srcDispatch({type:"flashMessage", value:"Unauthorized"})
+              return navigate(-1)
+            }
       }
     }
     getUserInfo()
@@ -207,7 +243,8 @@ function TeamEditTask() {
               </label>
               <input
                 type="text"
-                value={thisTask.Task_name}
+                value={state.acronym}
+                
                 id="taskName"
                 class="bg-stone-400 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Task name..."
@@ -220,7 +257,7 @@ function TeamEditTask() {
                 Task description
               </label>
               <textarea
-                value={thisTask.Task_description}
+                value={thisTask.taskDescription}
                 id="desc"
                 rows="4"
                 class="block p-2.5 w-full text-sm text-white bg-stone-400 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -252,16 +289,18 @@ function TeamEditTask() {
                   id="permitOpen"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 >
+                
                   <option value=""></option>
                   {plans.map((plan, index) => {
-                    if (taskPlan === plan.Plan_MVP_name) {
+                      if (taskPlan === plan.plan_MVP_name) {
                       return (
-                        <option value={plan.Plan_MVP_name} selected>
-                          {plan.Plan_MVP_name}
+                        <option value={plan.plan_MVP_name} selected>
+                        {plan.plan_MVP_name}
                         </option>
                       )
                     } else {
-                      return <option value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                      return <option value={plan.plan_MVP_name}>{plan.plan_MVP_name}</option>
+
                     }
                   })}
                 </select>
@@ -269,7 +308,7 @@ function TeamEditTask() {
               <div>
                 <p>
                   <span className="text-md font-semibold">Application acronym: </span>
-                  {thisTask.Task_app_Acronym}
+                  {state.acronym}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Create date: </span>
@@ -277,15 +316,15 @@ function TeamEditTask() {
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task creator </span>
-                  {thisTask.Task_creator}
+                  {thisTask.taskCreator}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Task owner: </span>
-                  {thisTask.Task_owner}
+                  {thisTask.taskOwner}
                 </p>
                 <p>
                   <span className="text-md font-semibold">Current task state: </span>
-                  {thisTask.Task_state}
+                  {thisTask.taskState}
                 </p>
               </div>
             </div>

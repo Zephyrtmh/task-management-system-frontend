@@ -10,13 +10,11 @@ const TaskModal = (props) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(()=>{
-    console.log("props", props)
     if(props.Task_notes){
       //Re-arranging the history notes
       var tempHistory = String(props.Task_notes).split("||");
       tempHistory = tempHistory.reverse()
       for(const k in tempHistory){
-        console.log("k", tempHistory[k])
         if(tempHistory[k] != "") setHistoryNotes(setHistoryNotes=>[...setHistoryNotes, String(tempHistory[k]).split("|")]);
       }
     }

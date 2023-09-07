@@ -32,13 +32,36 @@ function CreateApp() {
     setRnumber(rValue)
   }
 
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //HandleSubmit
   async function onSubmit(e) {
     e.preventDefault()
     //console.log(acronym, description, rnumber, startDate, endDate, open, toDo, doing, done);
     try {
       const result = await Axios.post(
-        "http://localhost:8080/create-application",
+        "http://localhost:8080/createApplication",
         { acronym, description, rnumber, startDate, endDate, open, toDo, doing, done, un: srcState.username, gn: "project leader", create },
         { withCredentials: true }
       )
@@ -67,37 +90,52 @@ function CreateApp() {
         srcDispatch({ type: "flashMessage", value: "Application created" })
         return navigate("/create/application")
       }
+      else if(result.data.message === "application exists") {
+        srcDispatch({ type: "flashMessage", value: "Application exists" })
+        // return navigate("/")
+      }
+      else if(result.data.message === "user inactive") {
+        srcDispatch({ type: "flashMessage", value: "user inactive" })
+        logoutFunc()
+        return navigate("/login");
+      }
+      else {
+        srcDispatch({ type: "flashMessage", value: "Not project leader" })
+        return navigate("/")
+      }
     } catch (err) {
       console.log(err.response.data.message)
-      if (err.response.data.message === "invalid end date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid end date" })
-      } else if (err.response.data.message === "Input require fields") {
-        srcDispatch({ type: "flashMessage", value: "Input fields required" })
-      } else if (err.response.data.message === "invalid start date") {
-        srcDispatch({ type: "flashMessage", value: "Invalid start date" })
-      } else if (err.response.data.message === "invalid group open") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
-      } else if (err.response.data.message === "invalid group toDo") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
-      } else if (err.response.data.message === "invalid group doing") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
-      } else if (err.response.data.message === "invalid group done") {
-        srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
-      } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
-        srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
-      } else if (err.response.data.message === "not authorized") {
-        srcDispatch({ type: "flashMessage", value: "Not authorized" })
-      } else {
-        srcDispatch({ type: "flashMessage", value: "Create application error" })
-      }
+      srcDispatch({ type: "flashMessage", value: "Something unusual broke the code" })
+      // if (err.response.data.message === "invalid end date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid end date" })
+      // } else if (err.response.data.message === "Input require fields") {
+      //   srcDispatch({ type: "flashMessage", value: "Input fields required" })
+      // } else if (err.response.data.message === "invalid start date") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid start date" })
+      // } else if (err.response.data.message === "invalid group open") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit open group" })
+      // } else if (err.response.data.message === "invalid group toDo") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit toDo group" })
+      // } else if (err.response.data.message === "invalid group doing") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit doing group" })
+      // } else if (err.response.data.message === "invalid group done") {
+      //   srcDispatch({ type: "flashMessage", value: "Invalid permit done group" })
+      // } else if (err.response.data.message.code === "ER_DUP_ENTRY") {
+      //   srcDispatch({ type: "flashMessage", value: "Application acronym exist" })
+      // } else if (err.response.data.message === "not authorized") {
+      //   srcDispatch({ type: "flashMessage", value: "Not authorized" })
+      // } else {
+      //   srcDispatch({ type: "flashMessage", value: "Create application error" })
+      // }
     }
   }
 
   //Get groups
   async function getGroups() {
     try {
-      const groupResult = await Axios.post("http://localhost:8080/allgroups", { un: srcState.username, gn: "project leader" }, { withCredentials: true })
+      const groupResult = await Axios.post("http://localhost:8080/getAllGroups", { un: srcState.username, gn: "project leader" }, { withCredentials: true })
       if (groupResult.data.success) {
+        console.log(groupResult.data.groups)
         setGroups(groupResult.data.groups)
       }
     } catch (e) {
@@ -106,31 +144,60 @@ function CreateApp() {
     }
   }
 
+  //Logout
+  async function logoutFunc(){
+
+    const logoutResult = await Axios.post("http://localhost:8080/logout", {}, {withCredentials: true});
+    if(logoutResult.status === 200){
+      //Clear localstorage
+      localStorage.clear();
+
+      //Set useState logIn to false
+      srcDispatch({type:"logout"});
+
+      localStorage.removeItem('authToken');
+
+      return navigate('/login');
+    }
+    //Clear localstorage
+    localStorage.clear();
+
+    //Set useState logIn to false
+    srcDispatch({type:"logout"});
+
+    return navigate('/login');
+  }
+
   //context
   const srcState = useContext(StateContext)
   const srcDispatch = useContext(DispatchContext)
 
   //useEffect
   useEffect(() => {
-    // try {
-    //   const getUserInfo = async () => {
-    //     const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
-    //     if (res.data.success) {
-    //       if (res.data.status == 0) navigate("/login")
-    //       srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
-    //       setLoadGroup(true)
-    //       if (!(await res.data.groups.includes("project leader"))) {
-    //         srcDispatch({ type: "flashMessage", value: "Not authorized" })
-    //         navigate("/")
-    //       }
-    //     } else {
-    //       navigate("/")
-    //     }
-    //   }
-    //   getUserInfo()
-    // } catch (err) {
-    //   console.log(err)
-    // }
+    try {
+      const getUserInfo = async () => {
+        const res = await Axios.post("http://localhost:8080/authtoken/return/userinfo", {}, { withCredentials: true })
+        if (res.data.success) {
+          if (res.data.status == 0) {
+            logoutFunc()
+            navigate("/login")
+          }
+          srcDispatch({ type: "login", value: res.data, admin: res.data.groups.includes("admin") })
+          setLoadGroup(true)
+          if (!(await res.data.groups.includes("project leader"))) {
+            srcDispatch({ type: "flashMessage", value: "Not authorized" })
+            navigate("/")
+          }
+
+          getGroups()
+        } else {
+          navigate("/")
+        }
+      }
+      getUserInfo()
+    } catch (err) {
+      console.log(err)
+    }
   }, [])
 
   async function authorization(){
@@ -140,13 +207,13 @@ function CreateApp() {
     }
   }
 
-  useEffect(() => {
-    getGroups()
-  }, [loadGroup])
+  // useEffect(() => {
+  //   getGroups()
+  // }, [loadGroup])
 
-  useEffect(()=>{
-    if(srcState.testLoginComplete) authorization();
-  },[srcState.testLoginComplete])
+  // useEffect(()=>{
+  //   if(srcState.testLoginComplete) authorization();
+  // },[srcState.testLoginComplete])
 
   return (
     <>
@@ -221,10 +288,10 @@ function CreateApp() {
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -242,10 +309,11 @@ function CreateApp() {
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  console.log(g);
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -263,10 +331,10 @@ function CreateApp() {
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -284,10 +352,10 @@ function CreateApp() {
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
@@ -305,10 +373,10 @@ function CreateApp() {
               >
                 <option value=""></option>
                 {groups.map((g, index) => {
-                  if (g.groupName != "admin") {
+                  if (g != "admin") {
                     return (
-                      <option key={index} value={g.groupName}>
-                        {g.groupName}
+                      <option key={index} value={g}>
+                        {g}
                       </option>
                     )
                   }
