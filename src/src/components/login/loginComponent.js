@@ -89,7 +89,7 @@ function LoginForm() {
           <label htmlFor="password">Password</label>
           <input type="password" id="password" name="password" className="shadow appearance-none border rounded w-full" onChange={e => passwordFunc(e.target.value)} />
 
-          <button className="btn bg-blue-500 shadow w-full mt-5">Submit</button>
+          <button className="btn bg-blue-500 shadow w-full mt-5">Proceed</button>
         </form>
       </div>
     </>
